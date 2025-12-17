@@ -190,6 +190,7 @@ export default function Home() {
     }, 60 * 1000)
     
     return () => clearInterval(interval)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const stats = {
@@ -238,7 +239,7 @@ export default function Home() {
               </div>
               <div className="flex gap-2">
                 <Button 
-                  onClick={fetchLeaderboard} 
+                  onClick={() => fetchLeaderboard(false)} 
                   disabled={loading} 
                   variant="outline"
                   className="bg-[#19297C] border-[#028090] hover:bg-[#028090] hover:border-[#F26430] text-white"
@@ -385,7 +386,7 @@ export default function Home() {
                   <p>{error}</p>
                 </div>
                 <Button 
-                  onClick={fetchLeaderboard} 
+                  onClick={() => fetchLeaderboard(false)} 
                   variant="outline"
                   className="bg-[#19297C] border-[#028090] hover:bg-[#028090] text-white"
                 >
