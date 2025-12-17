@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Trophy, Users, DollarSign, Home, Calendar, Lightbulb, Sun, Moon, Menu, X, ArrowRightLeft, BarChart3, BookOpen, Target } from "lucide-react"
+import { Trophy, Users, DollarSign, Home, Calendar, Lightbulb, Sun, Moon, Menu, X, ArrowRightLeft, BarChart3, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
@@ -10,9 +10,8 @@ import { useEffect, useState } from "react"
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: Home },
+  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
   { href: "/leaderboard-fpl", label: "FPL Leaderboard", icon: BarChart3 },
-  { href: "/captaincy", label: "C+VC Points", icon: Target },
-  { href: "/teams", label: "Teams", icon: Users },
   { href: "/gameweeks", label: "Gameweeks", icon: Calendar },
   { href: "/transfers", label: "Transfers", icon: ArrowRightLeft },
   { href: "/financials", label: "Financials", icon: DollarSign },

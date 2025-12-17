@@ -4,13 +4,14 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { RefreshCw, DollarSign, TrendingUp, TrendingDown, Trophy, Medal, AlertCircle } from "lucide-react"
+import { RefreshCw, DollarSign, TrendingUp, TrendingDown, Trophy, Medal, AlertCircle, BookOpen } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { LEAGUE_CONFIG } from "@/lib/constants"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { BlurFade } from "@/components/ui/blur-fade"
 import { NumberTicker } from "@/components/ui/number-ticker"
 import { GlobalRefresh } from "@/components/global-refresh"
+import Link from "next/link"
 
 interface UserFinancials {
   userName: string
@@ -38,14 +39,14 @@ export default function FinancialsPage() {
   const fetchFinancials = async () => {
     try {
       setLoading(true)
-      const response = await fetch("/api/sheets")
+      const response = await fetch("/api/fpl-data")
       const data = await response.json()
       
-      if (data.success && data.data?.summary) {
+      if (data.success && data.data?.leaderboard) {
         const gwCount = data.data.completedGameweeks || 15
         setCompletedGWs(gwCount)
         
-        const financials: UserFinancials[] = data.data.summary.map((entry: any) => {
+        const financials: UserFinancials[] = data.data.leaderboard.map((entry: any) => {
           const gwBuyIns = gwCount * LEAGUE_CONFIG.GW_BUY_IN
           const captaincyBuyIns = gwCount * LEAGUE_CONFIG.CAPTAINCY_BUY_IN
           const gwWinnerPayout = LEAGUE_CONFIG.NUM_PLAYERS * LEAGUE_CONFIG.GW_BUY_IN - LEAGUE_CONFIG.SECOND_PLACE_BONUS - Math.abs(LEAGUE_CONFIG.LAST_PLACE_PENALTY)
@@ -100,6 +101,15 @@ export default function FinancialsPage() {
               <p className="text-sm text-[#19297C] dark:text-[#DBC2CF]">After {completedGWs} gameweeks</p>
             </div>
             <div className="flex gap-2">
+              <Link href="/rules">
+                <Button 
+                  variant="outline"
+                  className="bg-white dark:bg-[#1A1F16] border-[#19297C] dark:border-[#028090] hover:bg-[#DBC2CF] dark:hover:bg-[#19297C] text-[#19297C] dark:text-[#028090]"
+                >
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  Rules
+                </Button>
+              </Link>
               <Button 
                 onClick={fetchFinancials} 
                 disabled={loading} 
@@ -118,8 +128,59 @@ export default function FinancialsPage() {
           <LoadingSpinner text="Loading" />
         ) : (
           <div className="space-y-4">
-            {/* Summary Cards */}
+            {/* League Rules Summary */}
             <BlurFade delay={0.05}>
+              <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
+                <CardHeader className="py-3 px-4 border-b border-[#DBC2CF] dark:border-[#19297C]">
+                  <CardTitle className="text-sm text-[#1A1F16] dark:text-[#FFFCF2] flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    League Financial Rules
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="space-y-1">
+                      <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] uppercase tracking-wider font-medium">FPL Buy-in</p>
+                      <p className="text-lg font-bold font-mono text-[#F26430]">₹{LEAGUE_CONFIG.FPL_BUY_IN}</p>
+                      <p className="text-xs text-[#19297C] dark:text-[#DBC2CF]">One-time fee</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] uppercase tracking-wider font-medium">GW Buy-in</p>
+                      <p className="text-lg font-bold font-mono text-[#F26430]">₹{LEAGUE_CONFIG.GW_BUY_IN}</p>
+                      <p className="text-xs text-[#19297C] dark:text-[#DBC2CF]">Per gameweek</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] uppercase tracking-wider font-medium">Captaincy Buy-in</p>
+                      <p className="text-lg font-bold font-mono text-[#F26430]">₹{LEAGUE_CONFIG.CAPTAINCY_BUY_IN}</p>
+                      <p className="text-xs text-[#19297C] dark:text-[#DBC2CF]">Per gameweek</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] uppercase tracking-wider font-medium">Last Place Penalty</p>
+                      <p className="text-lg font-bold font-mono text-[#F26430]">₹{Math.abs(LEAGUE_CONFIG.LAST_PLACE_PENALTY)}</p>
+                      <p className="text-xs text-[#19297C] dark:text-[#DBC2CF]">Per occurrence</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 p-3 bg-[#028090]/10 dark:bg-[#028090]/20 rounded-lg">
+                    <p className="text-xs text-[#19297C] dark:text-[#DBC2CF]">
+                      <strong>Gameweek Winner Payout:</strong> Total GW pot (₹{LEAGUE_CONFIG.NUM_PLAYERS * LEAGUE_CONFIG.GW_BUY_IN}) minus 2nd place bonus (₹{LEAGUE_CONFIG.SECOND_PLACE_BONUS}) and last place penalty (₹{Math.abs(LEAGUE_CONFIG.LAST_PLACE_PENALTY)}) = <strong>₹{LEAGUE_CONFIG.NUM_PLAYERS * LEAGUE_CONFIG.GW_BUY_IN - LEAGUE_CONFIG.SECOND_PLACE_BONUS - Math.abs(LEAGUE_CONFIG.LAST_PLACE_PENALTY)}</strong>
+                      <br />
+                      <strong>Captaincy Winner Payout:</strong> Total Captaincy pot (₹{LEAGUE_CONFIG.NUM_PLAYERS * LEAGUE_CONFIG.CAPTAINCY_BUY_IN}) = <strong>₹{LEAGUE_CONFIG.NUM_PLAYERS * LEAGUE_CONFIG.CAPTAINCY_BUY_IN}</strong>
+                    </p>
+                  </div>
+                  <div className="mt-3 text-center">
+                    <Link href="/rules">
+                      <Button variant="outline" size="sm" className="border-[#028090] text-[#028090] hover:bg-[#028090] hover:text-white">
+                        <BookOpen className="mr-2 h-3 w-3" />
+                        View Full Rules
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </BlurFade>
+
+            {/* Summary Cards */}
+            <BlurFade delay={0.1}>
               <div className="grid grid-cols-3 gap-3">
                 <Card className="bg-[#2B2D42] border-[#3d3f56]">
                   <CardContent className="p-4">
@@ -164,7 +225,7 @@ export default function FinancialsPage() {
             </BlurFade>
 
             {/* User Selector */}
-            <BlurFade delay={0.1}>
+            <BlurFade delay={0.15}>
               <Card className="bg-[#2B2D42] border-[#3d3f56]">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-4">
@@ -254,7 +315,7 @@ export default function FinancialsPage() {
             </BlurFade>
 
             {/* All Users Comparison */}
-            <BlurFade delay={0.15}>
+            <BlurFade delay={0.2}>
               <Card className="bg-[#2B2D42] border-[#3d3f56]">
                 <CardHeader className="py-3 px-4 border-b border-[#3d3f56]">
                   <CardTitle className="text-sm text-white">All Users Net Position</CardTitle>

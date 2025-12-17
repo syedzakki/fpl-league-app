@@ -140,27 +140,17 @@ function calculateCaptaincyPoints(
   const capElement = liveData.elements.find(e => e.id === captain.element)
   const viceElement = liveData.elements.find(e => e.id === viceCaptain.element)
   
-  const capBasePoints = capElement?.stats?.total_points || 0
+  const capPoints = capElement?.stats?.total_points || 0
   const capMinutes = capElement?.stats?.minutes || 0
-  const viceBasePoints = viceElement?.stats?.total_points || 0
-  const viceMinutes = viceElement?.stats?.minutes || 0
+  const vicePoints = viceElement?.stats?.total_points || 0
   
-  // C+VC Logic:
-  // C+VC Total = Captain's points with multiplier + Vice's points
-  // If captain played: (captain base * multiplier) + vice base
-  // If captain didn't play: captain base + (vice base * multiplier)
-  
+  // If captain played, C+VC = captain points * 2 + vice points
+  // If captain didn't play, vice captain doubles instead
   let cvTotal = 0
-  
-  if (capMinutes > 0) {
-    // Captain played - captain gets multiplier, vice doesn't
-    cvTotal = (capBasePoints * captain.multiplier) + viceBasePoints
-  } else if (viceMinutes > 0) {
-    // Captain didn't play - vice captain gets the multiplier instead
-    cvTotal = capBasePoints + (viceBasePoints * viceCaptain.multiplier)
+  if (capMinutes > 0 || capPoints > 0) {
+    cvTotal = (capPoints * captain.multiplier) + vicePoints
   } else {
-    // Neither played (rare case)
-    cvTotal = capBasePoints + viceBasePoints
+    cvTotal = (vicePoints * viceCaptain.multiplier) + capPoints
   }
   
   return cvTotal
@@ -265,14 +255,7 @@ export async function GET() {
     })
     
     // Calculate GW winners, second place, last place, and captaincy winners for each GW
-    const gameweekResults: Array<{
-      gameweek: number
-      winner: any
-      second: any
-      last: any
-      capWinner: any
-      teams: any[]
-    }> = []
+    const gameweekResults = []
     
     for (let gw = 1; gw <= completedGameweeks; gw++) {
       const gwTeams = teamsData
@@ -297,7 +280,7 @@ export async function GET() {
       })
       
       const winner = sortedByPoints[0]
-      const second = sortedByPoints.length > 1 ? sortedByPoints[1] : null
+      const second = sortedByPoints[1]
       const last = sortedByPoints[sortedByPoints.length - 1]
       
       // Sort by C+VC for captaincy winner (with tie-breaker: GW points)
@@ -315,7 +298,7 @@ export async function GET() {
         second,
         last,
         capWinner,
-        teams: sortedByPoints // Store sorted teams for debugging
+        teams: gwTeams
       })
     }
     
@@ -327,20 +310,10 @@ export async function GET() {
       let captaincyWins = 0
       
       gameweekResults.forEach(gwr => {
-        if (gwr.winner.teamId === team.teamId) {
-          gwWins++
-        }
-        // Only count as second if NOT the winner (in case of data issues)
-        if (gwr.second && gwr.second.teamId === team.teamId && gwr.winner.teamId !== team.teamId) {
-          secondFinishes++
-        }
-        // Only count as last if not the winner (for 2-player games or ties)
-        if (gwr.last.teamId === team.teamId && gwr.last.teamId !== gwr.winner.teamId) {
-          lastFinishes++
-        }
-        if (gwr.capWinner.teamId === team.teamId) {
-          captaincyWins++
-        }
+        if (gwr.winner.teamId === team.teamId) gwWins++
+        if (gwr.second.teamId === team.teamId) secondFinishes++
+        if (gwr.last.teamId === team.teamId && gwr.last.teamId !== gwr.winner.teamId) lastFinishes++
+        if (gwr.capWinner.teamId === team.teamId) captaincyWins++
       })
       
       return {
@@ -353,7 +326,7 @@ export async function GET() {
     })
     
     // Sort by total points (no hits) for final leaderboard
-    teamStats.sort((a, b) => (b.totalPointsNoHits || 0) - (a.totalPointsNoHits || 0))
+    teamStats.sort((a, b) => b.totalPointsNoHits - a.totalPointsNoHits)
     
     // Add positions
     const leaderboard = teamStats.map((team, index) => ({

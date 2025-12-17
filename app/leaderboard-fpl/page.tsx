@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { BlurFade } from "@/components/ui/blur-fade"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { RefreshCw, Trophy, TrendingDown, AlertCircle, ArrowRightLeft, X } from "lucide-react"
+import { RefreshCw, Trophy, TrendingDown, AlertCircle, ArrowRightLeft, X, ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { GlobalRefresh } from "@/components/global-refresh"
 
@@ -33,7 +33,9 @@ export default function FPLLeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState<FPLLeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [sortBy, setSortBy] = useState<"noHits" | "fpl">("noHits")
+  const [sortBy, setSortBy] = useState<"noHits" | "fpl" | "hits" | "hitCost">("fpl")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+  const [showNoHits, setShowNoHits] = useState(false)
   const [selectedTeam, setSelectedTeam] = useState<FPLLeaderboardEntry | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -64,12 +66,47 @@ export default function FPLLeaderboardPage() {
   }, [])
 
   const sortedLeaderboard = [...leaderboard].sort((a, b) => {
-    if (sortBy === "noHits") {
-      return b.totalPointsNoHits - a.totalPointsNoHits
-    } else {
-      return b.totalPointsFPL - a.totalPointsFPL
+    let comparison = 0
+    
+    switch (sortBy) {
+      case "noHits":
+        comparison = b.totalPointsNoHits - a.totalPointsNoHits
+        break
+      case "fpl":
+        comparison = b.totalPointsFPL - a.totalPointsFPL
+        break
+      case "hits":
+        comparison = b.totalHits - a.totalHits
+        break
+      case "hitCost":
+        comparison = b.totalHitCost - a.totalHitCost
+        break
+      default:
+        comparison = b.totalPointsFPL - a.totalPointsFPL
     }
+    
+    return sortOrder === "desc" ? comparison : -comparison
   })
+
+  const handleSort = (column: "noHits" | "fpl" | "hits" | "hitCost") => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === "desc" ? "asc" : "desc")
+    } else {
+      setSortBy(column)
+      setSortOrder("desc")
+    }
+  }
+
+  const getSortIcon = (column: "noHits" | "fpl" | "hits" | "hitCost") => {
+    if (sortBy !== column) {
+      return <ChevronsUpDown className="h-3 w-3 opacity-50" />
+    }
+    return sortOrder === "desc" ? (
+      <ArrowDown className="h-3 w-3" />
+    ) : (
+      <ArrowUp className="h-3 w-3" />
+    )
+  }
 
   const getPositionBadge = (position: number) => {
     if (position === 1) return (
@@ -142,52 +179,29 @@ export default function FPLLeaderboardPage() {
           </Card>
         ) : (
           <BlurFade delay={0.1}>
-            <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C] mb-4">
-              <CardHeader className="py-3 border-b border-[#DBC2CF] dark:border-[#19297C]">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-[#1A1F16] dark:text-[#FFFCF2] text-base">Sort By</CardTitle>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => setSortBy("noHits")}
-                      className={cn(
-                        "text-xs",
-                        sortBy === "noHits"
-                          ? "bg-[#F26430] text-white"
-                          : "bg-[#DBC2CF] dark:bg-[#19297C] text-[#1A1F16] dark:text-[#FFFCF2]"
-                      )}
-                    >
-                      Points (No Hits)
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => setSortBy("fpl")}
-                      className={cn(
-                        "text-xs",
-                        sortBy === "fpl"
-                          ? "bg-[#F26430] text-white"
-                          : "bg-[#DBC2CF] dark:bg-[#19297C] text-[#1A1F16] dark:text-[#FFFCF2]"
-                      )}
-                    >
-                      FPL Total (With Hits)
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
-
             <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C] overflow-hidden">
               <CardHeader className="py-4 px-6 border-b border-[#DBC2CF] dark:border-[#19297C]">
                 <div className="flex items-center space-x-3">
                   <div className="h-8 w-8 rounded-lg bg-[#F26430]/10 flex items-center justify-center">
                     <Trophy className="h-4 w-4 text-[#F26430]" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <CardTitle className="text-base text-[#1A1F16] dark:text-[#FFFCF2]">FPL Leaderboard</CardTitle>
                     <CardDescription className="text-xs text-[#19297C] dark:text-[#DBC2CF]">
-                      Points comparison: Without hits vs FPL total (with hits) • Click team name for transfer history
+                      Click column headers to sort • Click team name for transfer history
                     </CardDescription>
                   </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowNoHits(!showNoHits)}
+                    className={cn(
+                      "text-xs border-[#DBC2CF] dark:border-[#19297C]",
+                      showNoHits && "bg-[#F26430] text-white border-[#F26430] hover:bg-[#F26430]/90"
+                    )}
+                  >
+                    {showNoHits ? "Hide" : "Show"} Points (No Hits)
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
@@ -196,10 +210,44 @@ export default function FPLLeaderboardPage() {
                     <TableRow className="bg-[#DBC2CF]/30 dark:bg-[#19297C]/30 border-b border-[#DBC2CF] dark:border-[#19297C] hover:bg-[#DBC2CF]/30 dark:hover:bg-[#19297C]/30">
                       <TableHead className="py-3 px-4 font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider">Pos</TableHead>
                       <TableHead className="py-3 px-4 font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider">Team</TableHead>
-                      <TableHead className="py-3 px-4 text-right font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider">Points (No Hits)</TableHead>
-                      <TableHead className="py-3 px-4 text-right font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider">FPL Total</TableHead>
-                      <TableHead className="py-3 px-4 text-center font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider">Hits</TableHead>
-                      <TableHead className="py-3 px-4 text-right font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider">Hit Cost</TableHead>
+                      {showNoHits && (
+                        <TableHead 
+                          className="py-3 px-4 text-right font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider cursor-pointer hover:text-[#F26430] transition-colors"
+                          onClick={() => handleSort("noHits")}
+                        >
+                          <div className="flex items-center justify-end gap-1">
+                            Points (No Hits)
+                            {getSortIcon("noHits")}
+                          </div>
+                        </TableHead>
+                      )}
+                      <TableHead 
+                        className="py-3 px-4 text-right font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider cursor-pointer hover:text-[#F26430] transition-colors"
+                        onClick={() => handleSort("fpl")}
+                      >
+                        <div className="flex items-center justify-end gap-1">
+                          FPL Total
+                          {getSortIcon("fpl")}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="py-3 px-4 text-center font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider cursor-pointer hover:text-[#F26430] transition-colors"
+                        onClick={() => handleSort("hits")}
+                      >
+                        <div className="flex items-center justify-center gap-1">
+                          Hits
+                          {getSortIcon("hits")}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="py-3 px-4 text-right font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider cursor-pointer hover:text-[#F26430] transition-colors"
+                        onClick={() => handleSort("hitCost")}
+                      >
+                        <div className="flex items-center justify-end gap-1">
+                          Hit Cost
+                          {getSortIcon("hitCost")}
+                        </div>
+                      </TableHead>
                       <TableHead className="py-3 px-4 text-right font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider">Difference</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -231,11 +279,13 @@ export default function FPLLeaderboardPage() {
                               <ArrowRightLeft className="h-3 w-3" />
                             </button>
                           </TableCell>
-                          <TableCell className="py-3 px-4 text-right">
-                            <span className="font-bold font-mono text-lg text-[#1A1F16] dark:text-[#FFFCF2]">
-                              {entry.totalPointsNoHits}
-                            </span>
-                          </TableCell>
+                          {showNoHits && (
+                            <TableCell className="py-3 px-4 text-right">
+                              <span className="font-bold font-mono text-lg text-[#1A1F16] dark:text-[#FFFCF2]">
+                                {entry.totalPointsNoHits}
+                              </span>
+                            </TableCell>
+                          )}
                           <TableCell className="py-3 px-4 text-right">
                             <span className="font-bold font-mono text-lg text-[#028090]">
                               {entry.totalPointsFPL}

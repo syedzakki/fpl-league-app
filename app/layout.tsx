@@ -3,7 +3,6 @@ import { Inter, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 import { Navigation } from "@/components/navigation"
 import { ThemeProvider } from "@/components/theme-provider"
-import { ToastProvider } from "@/components/ui/toast"
 
 const inter = Inter({
   variable: "--font-inter",
@@ -41,12 +40,10 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <ToastProvider>
-            <Navigation />
-            <main className="relative min-h-screen">
-              {children}
-            </main>
-          </ToastProvider>
+          <Navigation />
+          <main className="relative min-h-screen">
+            {children}
+          </main>
         </ThemeProvider>
       </body>
     </html>

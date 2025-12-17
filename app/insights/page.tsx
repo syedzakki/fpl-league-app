@@ -9,9 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BlurFade } from "@/components/ui/blur-fade"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { LeagueComparisonChart } from "@/components/charts/league-comparison-chart"
-import { RefreshCw, Calendar, AlertTriangle, TrendingUp, Star, Users, Target, BarChart3 } from "lucide-react"
+import { RefreshCw, Calendar, AlertTriangle, TrendingUp, Star, Users, Target, BarChart3, ArrowRightLeft } from "lucide-react"
 import { format } from "date-fns"
 import { GlobalRefresh } from "@/components/global-refresh"
+import { TopTransfersDisplay } from "@/components/top-transfers-display"
 
 interface Fixture {
   id: number
@@ -90,7 +91,7 @@ export default function InsightsPage() {
   const [currentGw, setCurrentGw] = useState<number>(1)
   const [completedGWs, setCompletedGWs] = useState<number>(0)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState("leaguestats")
+  const [activeTab, setActiveTab] = useState("transfers")
 
   const fetchData = async () => {
     try {
@@ -207,7 +208,19 @@ export default function InsightsPage() {
         ) : (
           <BlurFade delay={0.1}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-5 bg-[#2B2D42] border border-[#3d3f56]">
+              <TabsList className="grid w-full grid-cols-6 bg-[#2B2D42] border border-[#3d3f56]">
+                <TabsTrigger value="transfers" className="flex items-center gap-2 data-[state=active]:bg-[#F7E733] data-[state=active]:text-[#2B2D42]">
+                  <ArrowRightLeft className="h-4 w-4" />
+                  Transfers
+                </TabsTrigger>
+                <TabsTrigger value="recommendations" className="flex items-center gap-2 data-[state=active]:bg-[#F7E733] data-[state=active]:text-[#2B2D42]">
+                  <TrendingUp className="h-4 w-4" />
+                  Picks
+                </TabsTrigger>
+                <TabsTrigger value="bestteam" className="flex items-center gap-2 data-[state=active]:bg-[#F7E733] data-[state=active]:text-[#2B2D42]">
+                  <Star className="h-4 w-4" />
+                  Best Team
+                </TabsTrigger>
                 <TabsTrigger value="leaguestats" className="flex items-center gap-2 data-[state=active]:bg-[#F7E733] data-[state=active]:text-[#2B2D42]">
                   <BarChart3 className="h-4 w-4" />
                   League Stats
@@ -220,15 +233,12 @@ export default function InsightsPage() {
                   <AlertTriangle className="h-4 w-4" />
                   Injuries
                 </TabsTrigger>
-                <TabsTrigger value="recommendations" className="flex items-center gap-2 data-[state=active]:bg-[#F7E733] data-[state=active]:text-[#2B2D42]">
-                  <TrendingUp className="h-4 w-4" />
-                  Picks
-                </TabsTrigger>
-                <TabsTrigger value="bestteam" className="flex items-center gap-2 data-[state=active]:bg-[#F7E733] data-[state=active]:text-[#2B2D42]">
-                  <Star className="h-4 w-4" />
-                  Best Team
-                </TabsTrigger>
               </TabsList>
+
+              {/* Top Transfers Tab */}
+              <TabsContent value="transfers" className="space-y-6">
+                <TopTransfersDisplay />
+              </TabsContent>
 
               {/* League Stats Tab */}
               <TabsContent value="leaguestats" className="space-y-6">

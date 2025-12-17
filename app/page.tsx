@@ -1,14 +1,14 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
-import { InteractiveLeaderboard } from "@/components/interactive-leaderboard"
+import { useEffect, useState } from "react"
+import { LeaderboardTable } from "@/components/leaderboard-table"
 import { PositionHistoryChart } from "@/components/charts/position-history-chart"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { BlurFade } from "@/components/ui/blur-fade"
 import { NumberTicker } from "@/components/ui/number-ticker"
 import { LoadingSpinner, SkeletonCard, SkeletonTable } from "@/components/ui/loading-spinner"
-import { useToast } from "@/components/ui/toast"
+import { NextDeadlineCard } from "@/components/deadline-countdown"
 import Link from "next/link"
 import { 
   Trophy, 
@@ -19,8 +19,7 @@ import {
   Calendar, 
   Lightbulb, 
   Zap,
-  Crown,
-  Radio
+  Crown
 } from "lucide-react"
 import type { LeaderboardEntry } from "@/lib/types"
 import { LEAGUE_CONFIG } from "@/lib/constants"
@@ -33,7 +32,6 @@ interface PositionData {
 
 export default function Home() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
-  const [previousLeaderboard, setPreviousLeaderboard] = useState<LeaderboardEntry[]>([])
   const [positionHistory, setPositionHistory] = useState<PositionData[]>([])
   const [players, setPlayers] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -41,16 +39,10 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
   const [completedGWs, setCompletedGWs] = useState(0)
   const [totalPot, setTotalPot] = useState(0)
-  const [isLive, setIsLive] = useState(false)
-  const { addToast } = useToast()
-  const previousLeaderRef = useRef<string | null>(null)
 
-  const fetchLeaderboard = async (showNotifications = false) => {
+  const fetchLeaderboard = async () => {
     try {
-      const isInitialLoad = loading
-      if (!isInitialLoad) {
-        setLoading(false) // Don't show loading spinner on auto-refresh
-      }
+      setLoading(true)
       setError(null)
       
       const response = await fetch("/api/fpl-data")
@@ -61,59 +53,17 @@ export default function Home() {
           position: team.leaderboardPos || 0,
           teamId: team.teamId,
           teamName: team.userName,
-          totalPoints: team.totalPoints || 0,
+          totalPoints: team.totalPointsNoHits || 0,
           gwWins: team.gwWins || 0,
           secondFinishes: team.secondFinishes || 0,
           lastFinishes: team.lastFinishes || 0,
           captaincyWins: team.captaincyWins || 0,
           netFinancial: 0,
         }))
-        
-        // Detect changes and show notifications
-        if (showNotifications && leaderboard.length > 0) {
-          // Check for leader change
-          const currentLeader = entries[0]
-          const previousLeader = leaderboard[0]
-          
-          if (currentLeader && previousLeader && currentLeader.teamId !== previousLeader.teamId) {
-            addToast({
-              title: "👑 New Leader!",
-              description: `${currentLeader.teamName} has taken the lead with ${currentLeader.totalPoints} points!`,
-              variant: "success",
-              duration: 5000
-            })
-          }
-          
-          // Check for position changes
-          entries.forEach(entry => {
-            const prev = leaderboard.find(t => t.teamId === entry.teamId)
-            if (prev && prev.position !== entry.position) {
-              const change = prev.position - entry.position
-              if (Math.abs(change) >= 2) { // Only notify for significant changes
-                addToast({
-                  title: change > 0 ? "📈 Position Up!" : "📉 Position Down",
-                  description: `${entry.teamName} moved ${Math.abs(change)} places to ${entry.position}${entry.position === 1 ? 'st' : entry.position === 2 ? 'nd' : entry.position === 3 ? 'rd' : 'th'}!`,
-                  variant: change > 0 ? "success" : "warning",
-                  duration: 4000
-                })
-              }
-            }
-          })
-        }
-        
-        // Save previous state
-        if (leaderboard.length > 0) {
-          setPreviousLeaderboard([...leaderboard])
-        }
-        
         setLeaderboard(entries)
         
         const gwCount = data.data.completedGameweeks || 0
         setCompletedGWs(gwCount)
-        
-        // Check if gameweek is currently live (you can adjust this logic)
-        const currentGW = data.data.currentGameweek || gwCount
-        setIsLive(currentGW > gwCount && currentGW <= gwCount + 1)
         
         const numTeams = entries.length
         const pot = numTeams * LEAGUE_CONFIG.FPL_BUY_IN + 
@@ -181,16 +131,9 @@ export default function Home() {
   }
 
   useEffect(() => {
-    // Initial fetch
-    fetchLeaderboard(false)
-    
-    // Auto-refresh every 60 seconds with notifications
-    const interval = setInterval(() => {
-      fetchLeaderboard(true)
-    }, 60 * 1000)
-    
+    fetchLeaderboard()
+    const interval = setInterval(fetchLeaderboard, 5 * 60 * 1000)
     return () => clearInterval(interval)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const stats = {
@@ -220,26 +163,20 @@ export default function Home() {
                       Updated {lastUpdated.toLocaleTimeString()}
                     </span>
                   )}
-                  {!loading && isLive && (
-                    <span className="flex items-center gap-1.5 text-[#F26430]">
-                      <span className="relative flex h-2 w-2 live-pulse">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F26430] opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F26430]"></span>
+                  {!loading && (
+                    <span className="flex items-center gap-1.5 text-[#028090]">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#028090] opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#028090]"></span>
                       </span>
-                      <Radio className="w-3 h-3" />
-                      LIVE
-                    </span>
-                  )}
-                  {!loading && !isLive && (
-                    <span className="text-[#028090] text-xs font-medium">
-                      Auto-updating
+                      Live
                     </span>
                   )}
                 </div>
               </div>
               <div className="flex gap-2">
                 <Button 
-                  onClick={() => fetchLeaderboard(false)} 
+                  onClick={fetchLeaderboard} 
                   disabled={loading} 
                   variant="outline"
                   className="bg-[#19297C] border-[#028090] hover:bg-[#028090] hover:border-[#F26430] text-white"
@@ -255,25 +192,25 @@ export default function Home() {
 
         {/* Stats Cards */}
         {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {[...Array(4)].map((_, i) => (
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+            {[...Array(5)].map((_, i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
             {/* Teams Card */}
             <BlurFade delay={0.05}>
-              <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C] hover-lift smooth-transition">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
+              <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C] h-full">
+                <CardContent className="p-5 h-[100px] flex items-center">
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex-1">
                       <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] uppercase tracking-wider font-medium mb-1">Teams</p>
                       <p className="text-3xl font-bold font-mono text-[#1A1F16] dark:text-[#FFFCF2]">
                         <NumberTicker value={stats.totalTeams} />
                       </p>
                     </div>
-                    <div className="h-12 w-12 rounded-lg bg-[#19297C]/10 dark:bg-[#028090]/10 flex items-center justify-center">
+                    <div className="h-12 w-12 rounded-lg bg-[#19297C]/10 dark:bg-[#028090]/10 flex items-center justify-center flex-shrink-0">
                       <Users className="h-6 w-6 text-[#19297C] dark:text-[#028090]" />
                     </div>
                   </div>
@@ -283,16 +220,16 @@ export default function Home() {
 
             {/* Gameweeks Card */}
             <BlurFade delay={0.1}>
-              <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C] hover-lift smooth-transition">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
+              <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C] h-full">
+                <CardContent className="p-5 h-[100px] flex items-center">
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex-1">
                       <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] uppercase tracking-wider font-medium mb-1">Gameweeks</p>
                       <p className="text-3xl font-bold font-mono text-[#1A1F16] dark:text-[#FFFCF2]">
                         <NumberTicker value={stats.totalGWs} />
                       </p>
                     </div>
-                    <div className="h-12 w-12 rounded-lg bg-[#028090]/10 flex items-center justify-center">
+                    <div className="h-12 w-12 rounded-lg bg-[#028090]/10 flex items-center justify-center flex-shrink-0">
                       <TrendingUp className="h-6 w-6 text-[#028090]" />
                     </div>
                   </div>
@@ -302,16 +239,16 @@ export default function Home() {
 
             {/* Total Pot Card */}
             <BlurFade delay={0.15}>
-              <Card className="bg-white dark:bg-[#1A1F16] border-[#028090] dark:border-[#028090]/50 hover-lift smooth-transition">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
+              <Card className="bg-white dark:bg-[#1A1F16] border-[#028090] dark:border-[#028090]/50 h-full">
+                <CardContent className="p-5 h-[100px] flex items-center">
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex-1">
                       <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] uppercase tracking-wider font-medium mb-1">Total Pot</p>
                       <p className="text-3xl font-bold font-mono text-[#028090]">
                         ₹<NumberTicker value={stats.totalPot} />
                       </p>
                     </div>
-                    <div className="h-12 w-12 rounded-lg bg-[#028090]/10 flex items-center justify-center">
+                    <div className="h-12 w-12 rounded-lg bg-[#028090]/10 flex items-center justify-center flex-shrink-0">
                       <DollarSign className="h-6 w-6 text-[#028090]" />
                     </div>
                   </div>
@@ -321,38 +258,42 @@ export default function Home() {
 
             {/* Leader Card */}
             <BlurFade delay={0.2}>
-              <Card className="bg-white dark:bg-[#1A1F16] border-[#F26430] dark:border-[#F26430]/50 hover-lift smooth-transition badge-glow">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
+              <Card className="bg-white dark:bg-[#1A1F16] border-[#F26430] dark:border-[#F26430]/50 h-full">
+                <CardContent className="p-5 h-[100px] flex items-center">
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex-1 min-w-0">
                       <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] uppercase tracking-wider font-medium mb-1">Leader</p>
-                      <p className="text-xl font-bold text-[#1A1F16] dark:text-[#FFFCF2] truncate mb-0.5">
+                      <p className="text-xl font-bold text-[#1A1F16] dark:text-[#FFFCF2] truncate">
                         {stats.leader?.teamName || "—"}
                       </p>
                       <p className="text-sm font-mono text-[#F26430]">
                         {stats.leader?.totalPoints || 0} pts
                       </p>
                     </div>
-                    <div className="h-12 w-12 rounded-lg bg-[#F26430]/10 flex items-center justify-center">
+                    <div className="h-12 w-12 rounded-lg bg-[#F26430]/10 flex items-center justify-center flex-shrink-0">
                       <Crown className="h-6 w-6 text-[#F26430]" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </BlurFade>
+
+            {/* Deadline Countdown Card */}
+            <BlurFade delay={0.25} className="col-span-2 lg:col-span-1">
+              <NextDeadlineCard />
+            </BlurFade>
           </div>
         )}
 
           {/* Quick Navigation */}
-          <BlurFade delay={0.25}>
+          <BlurFade delay={0.3}>
             <div className="mb-8">
               <h2 className="text-sm font-semibold text-[#19297C] dark:text-[#DBC2CF] uppercase tracking-wider mb-4">
                 Quick Access
               </h2>
-              <div className="grid grid-cols-5 gap-3">
+              <div className="grid grid-cols-4 gap-3">
               {[
                 { href: "/leaderboard", Icon: Trophy, name: "Leaderboard", color: "#F26430" },
-                { href: "/teams", Icon: Users, name: "Teams", color: "#19297C" },
                 { href: "/gameweeks", Icon: Calendar, name: "Gameweeks", color: "#028090" },
                 { href: "/financials", Icon: DollarSign, name: "Financials", color: "#028090" },
                 { href: "/insights", Icon: Lightbulb, name: "Insights", color: "#19297C" },
@@ -360,7 +301,7 @@ export default function Home() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="group flex flex-col items-center justify-center gap-2 p-4 rounded-lg bg-white dark:bg-[#1A1F16] border border-[#DBC2CF] dark:border-[#19297C] hover:border-[#F26430] dark:hover:border-[#028090] smooth-transition hover-lift touch-feedback"
+                  className="group flex flex-col items-center justify-center gap-2 p-4 rounded-lg bg-white dark:bg-[#1A1F16] border border-[#DBC2CF] dark:border-[#19297C] hover:border-[#F26430] dark:hover:border-[#028090] transition-all duration-200 hover:scale-105"
                 >
                   <item.Icon
                     className="h-6 w-6 transition-colors"
@@ -376,7 +317,7 @@ export default function Home() {
           </BlurFade>
 
         {/* Leaderboard */}
-        <BlurFade delay={0.3}>
+        <BlurFade delay={0.35}>
           {loading ? (
             <SkeletonTable />
             ) : error ? (
@@ -386,7 +327,7 @@ export default function Home() {
                   <p>{error}</p>
                 </div>
                 <Button 
-                  onClick={() => fetchLeaderboard(false)} 
+                  onClick={fetchLeaderboard} 
                   variant="outline"
                   className="bg-[#19297C] border-[#028090] hover:bg-[#028090] text-white"
                 >
@@ -394,10 +335,7 @@ export default function Home() {
                 </Button>
               </Card>
             ) : leaderboard.length > 0 ? (
-              <InteractiveLeaderboard 
-                data={leaderboard} 
-                previousData={previousLeaderboard.length > 0 ? previousLeaderboard : undefined}
-              />
+              <LeaderboardTable entries={leaderboard.slice(0, 6)} />
             ) : (
               <Card className="p-8 text-center bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
                 <p className="text-[#19297C] dark:text-[#DBC2CF]">No data available</p>
@@ -407,7 +345,7 @@ export default function Home() {
 
         {/* Position History Chart */}
         {!loading && positionHistory.length > 0 && players.length > 0 && (
-          <BlurFade delay={0.35}>
+          <BlurFade delay={0.4}>
             <div className="mt-6">
               <PositionHistoryChart data={positionHistory} players={players} />
             </div>
