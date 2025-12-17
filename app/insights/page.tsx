@@ -100,41 +100,72 @@ export default function InsightsPage() {
     try {
       setLoading(true)
       
-      const [fplResponse, recsResponse, sheetsResponse] = await Promise.all([
+      const [fplResponse, recsResponse, fplDataResponse, fixturesResponse] = await Promise.all([
         fetch("/api/fpl"),
         fetch("/api/recommendations"),
-        fetch("/api/sheets"),
+        fetch("/api/fpl-data"),
+        fetch("https://fantasy.premierleague.com/api/fixtures/"),
       ])
       
       const fplData = await fplResponse.json()
       const recsData = await recsResponse.json()
-      const sheetsData = await sheetsResponse.json()
+      const fplLeagueData = await fplDataResponse.json()
+      const allFixtures = await fixturesResponse.json()
       
       if (fplData.success) {
-        setFixtures(fplData.data.upcomingFixtures || [])
         setInjuries(fplData.data.injuries || [])
-        setTeams(fplData.data.teams || [])
         setCurrentGw(fplData.data.gameweek?.current || 1)
+        
+        // Process all fixtures for FDR table
+        if (allFixtures && fplData.data.teams) {
+          const currentGw = fplData.data.gameweek?.current || 1
+          const teamMap = new Map(fplData.data.teams.map((t: any) => [t.id, t]))
+          
+          const processedFixtures = allFixtures
+            .filter((f: any) => f.event && f.event >= currentGw && f.event <= currentGw + 9)
+            .map((f: any) => {
+              const homeTeam = teamMap.get(f.team_h)
+              const awayTeam = teamMap.get(f.team_a)
+              return {
+                id: f.id,
+                gameweek: f.event,
+                homeTeam: homeTeam?.short_name || '?',
+                awayTeam: awayTeam?.short_name || '?',
+                kickoff: f.kickoff_time,
+                finished: f.finished || false,
+                started: f.started || false,
+                homeScore: f.team_h_score,
+                awayScore: f.team_a_score,
+                homeDifficulty: f.team_h_difficulty || 3,
+                awayDifficulty: f.team_a_difficulty || 3,
+              }
+            })
+          
+          setFixtures(processedFixtures)
+          setTeams(fplData.data.teams || [])
+        }
       }
       
       if (recsData.success) {
         setRecommendations(recsData.data)
       }
       
-      if (sheetsData.success && sheetsData.data?.summary) {
-        const stats: LeagueStats[] = sheetsData.data.summary.map((item: any) => ({
+      // Use FPL API data instead of Google Sheets for accurate totals
+      if (fplLeagueData.success && fplLeagueData.data?.leaderboard) {
+        const completedGWs = fplLeagueData.data.completedGameweeks || 0
+        const stats: LeagueStats[] = fplLeagueData.data.leaderboard.map((item: any) => ({
           teamName: item.userName,
           gwWins: item.gwWins || 0,
           secondFinishes: item.secondFinishes || 0,
           lastFinishes: item.lastFinishes || 0,
           captaincyWins: item.captaincyWins || 0,
-          totalPoints: item.totalPoints || 0,
-          averagePoints: sheetsData.data.completedGameweeks 
-            ? Math.round(item.totalPoints / sheetsData.data.completedGameweeks)
+          totalPoints: item.totalPoints || 0, // FPL Total (official with hits)
+          averagePoints: completedGWs 
+            ? Math.round((item.totalPoints || 0) / completedGWs)
             : 0,
         }))
         setLeagueStats(stats)
-        setCompletedGWs(sheetsData.data.completedGameweeks || 0)
+        setCompletedGWs(completedGWs)
       }
     } catch (error) {
       console.error("Error fetching insights:", error)
