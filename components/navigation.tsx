@@ -10,7 +10,6 @@ import { useEffect, useState } from "react"
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: Home },
-  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
   { href: "/leaderboard-fpl", label: "FPL Leaderboard", icon: BarChart3 },
   { href: "/gameweeks", label: "Gameweeks", icon: Calendar },
   { href: "/transfers", label: "Transfers", icon: ArrowRightLeft },

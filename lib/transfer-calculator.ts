@@ -179,16 +179,9 @@ export function processTeamTransfers(
  * Special events that grant extra free transfers
  * Format: { gameweek: freeTransfers }
  * 
- * Note: AFCON happened around GW20-21 (January 2024)
- * FPL granted 5 free transfers due to players leaving for international duty
- * 
- * To add special events, uncomment and set the appropriate gameweek:
- * Example: If GW20 had 5 free transfers due to AFCON:
- *   20: 5,
+ * GW16 (2024/25 season): 5 free transfers granted (1 regular + 4 additional)
  */
 export const SPECIAL_TRANSFER_EVENTS: Record<number, number> = {
-  // Add special events here when needed
-  // Example: 20: 5, // GW20 had 5 free transfers due to AFCON
-  // Example: 21: 5, // GW21 had 5 free transfers due to AFCON
+  16: 5, // GW16 had 5 free transfers (1 + 4 additional)
 }
 

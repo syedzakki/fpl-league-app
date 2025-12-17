@@ -124,16 +124,49 @@ export function NextDeadlineCard() {
   useEffect(() => {
     const fetchDeadline = async () => {
       try {
-        const response = await fetch("https://fantasy.premierleague.com/api/bootstrap-static/")
-        const data = await response.json()
+        // Fetch bootstrap data for gameweek info
+        const [bootstrapResponse, fixturesResponse] = await Promise.all([
+          fetch("https://fantasy.premierleague.com/api/bootstrap-static/"),
+          fetch("https://fantasy.premierleague.com/api/fixtures/")
+        ])
         
-        // Find the next gameweek
-        const nextGW = data.events.find((event: any) => !event.finished && !event.is_current)
-        if (nextGW) {
-          setDeadlineData({
-            deadline: nextGW.deadline_time,
-            gameweek: nextGW.id,
-          })
+        const bootstrapData = await bootstrapResponse.json()
+        const fixtures = await fixturesResponse.json()
+        
+        // Find the current or next gameweek
+        const currentGW = bootstrapData.events.find((event: any) => event.is_current)
+        const nextGW = bootstrapData.events.find((event: any) => !event.finished && !event.is_current)
+        
+        // Determine which gameweek to show deadline for
+        let targetGW = currentGW?.finished ? nextGW : currentGW
+        
+        if (targetGW) {
+          // Get fixtures for this gameweek
+          const gwFixtures = fixtures.filter((f: any) => f.event === targetGW.id && f.kickoff_time)
+          
+          if (gwFixtures.length > 0) {
+            // Sort by kickoff time to get the first match
+            gwFixtures.sort((a: any, b: any) => 
+              new Date(a.kickoff_time).getTime() - new Date(b.kickoff_time).getTime()
+            )
+            
+            const firstFixture = gwFixtures[0]
+            const firstKickoff = new Date(firstFixture.kickoff_time)
+            
+            // Set deadline to 1.5 hours before first kickoff
+            const deadline = new Date(firstKickoff.getTime() - (90 * 60 * 1000))
+            
+            setDeadlineData({
+              deadline: deadline.toISOString(),
+              gameweek: targetGW.id,
+            })
+          } else {
+            // Fallback to official deadline if no fixtures found
+            setDeadlineData({
+              deadline: targetGW.deadline_time,
+              gameweek: targetGW.id,
+            })
+          }
         }
       } catch (error) {
         console.error("Error fetching deadline:", error)

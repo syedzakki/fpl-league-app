@@ -159,12 +159,12 @@ export default function TransfersPage() {
                             <p className="text-2xl font-bold text-[#F26430]">-{team.totalHitCost}</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] mb-1">Points (No Hits)</p>
-                            <p className="text-2xl font-bold text-[#1A1F16] dark:text-[#FFFCF2]">{team.totalGwPoints}</p>
+                            <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] mb-1">FPL Total</p>
+                            <p className="text-2xl font-bold text-[#028090]">{team.totalGwPointsWithHits}</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] mb-1">Points (With Hits)</p>
-                            <p className="text-2xl font-bold text-[#1A1F16] dark:text-[#FFFCF2]">{team.totalGwPointsWithHits}</p>
+                            <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] mb-1">Points (No Hits)</p>
+                            <p className="text-2xl font-bold text-[#1A1F16] dark:text-[#FFFCF2]">{team.totalGwPoints}</p>
                           </div>
                         </div>
 
@@ -178,8 +178,8 @@ export default function TransfersPage() {
                                 <TableHead className="text-white">Free</TableHead>
                                 <TableHead className="text-white">Hits</TableHead>
                                 <TableHead className="text-white">Hit Cost</TableHead>
-                                <TableHead className="text-white">GW Points</TableHead>
-                                <TableHead className="text-white">Points (With Hits)</TableHead>
+                                <TableHead className="text-white">FPL Points</TableHead>
+                                <TableHead className="text-white">Points (No Hits)</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -216,11 +216,11 @@ export default function TransfersPage() {
                                         <span className="text-[#19297C] dark:text-[#DBC2CF]">0</span>
                                       )}
                                     </TableCell>
+                                    <TableCell className="font-mono font-bold text-[#028090]">
+                                      {gw.gwPointsWithHits}
+                                    </TableCell>
                                     <TableCell className="font-mono text-[#1A1F16] dark:text-[#FFFCF2]">
                                       {gw.gwPoints}
-                                    </TableCell>
-                                    <TableCell className="font-mono font-bold text-[#1A1F16] dark:text-[#FFFCF2]">
-                                      {gw.gwPointsWithHits}
                                     </TableCell>
                                   </TableRow>
                                 ))}
@@ -248,8 +248,8 @@ export default function TransfersPage() {
                           <TableHead className="text-white">Team</TableHead>
                           <TableHead className="text-white">Total Hits</TableHead>
                           <TableHead className="text-white">Hit Cost</TableHead>
+                          <TableHead className="text-white">FPL Total</TableHead>
                           <TableHead className="text-white">Points (No Hits)</TableHead>
-                          <TableHead className="text-white">Points (With Hits)</TableHead>
                           <TableHead className="text-white">Difference</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -279,11 +279,11 @@ export default function TransfersPage() {
                                   <span className="text-[#19297C] dark:text-[#DBC2CF]">0</span>
                                 )}
                               </TableCell>
+                              <TableCell className="font-mono font-bold text-[#028090]">
+                                {team.totalGwPointsWithHits}
+                              </TableCell>
                               <TableCell className="font-mono text-[#1A1F16] dark:text-[#FFFCF2]">
                                 {team.totalGwPoints}
-                              </TableCell>
-                              <TableCell className="font-mono font-bold text-[#1A1F16] dark:text-[#FFFCF2]">
-                                {team.totalGwPointsWithHits}
                               </TableCell>
                               <TableCell>
                                 <span className="text-[#F26430] font-mono">

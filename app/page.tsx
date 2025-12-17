@@ -293,7 +293,7 @@ export default function Home() {
               </h2>
               <div className="grid grid-cols-4 gap-3">
               {[
-                { href: "/leaderboard", Icon: Trophy, name: "Leaderboard", color: "#F26430" },
+                { href: "/leaderboard-fpl", Icon: Trophy, name: "Leaderboard", color: "#F26430" },
                 { href: "/gameweeks", Icon: Calendar, name: "Gameweeks", color: "#028090" },
                 { href: "/financials", Icon: DollarSign, name: "Financials", color: "#028090" },
                 { href: "/insights", Icon: Lightbulb, name: "Insights", color: "#19297C" },
