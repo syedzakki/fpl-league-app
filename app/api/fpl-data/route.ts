@@ -255,7 +255,23 @@ export async function GET() {
     })
     
     // Calculate GW winners, second place, last place, and captaincy winners for each GW
-    const gameweekResults = []
+    const gameweekResults: Array<{
+      gameweek: number
+      winner: { teamId: string; userName: string; points: number; captaincyPoints: number }
+      second: { teamId: string; userName: string; points: number; captaincyPoints: number }
+      last: { teamId: string; userName: string; points: number; captaincyPoints: number }
+      capWinner: { teamId: string; userName: string; points: number; captaincyPoints: number }
+      teams: Array<{
+        teamId: string
+        userName: string
+        points: number
+        captaincyPoints: number
+        isWinner: boolean
+        isSecond: boolean
+        isLast: boolean
+        isCapWinner: boolean
+      }>
+    }> = []
     
     for (let gw = 1; gw <= completedGameweeks; gw++) {
       const gwTeams = teamsData
@@ -298,7 +314,16 @@ export async function GET() {
         second,
         last,
         capWinner,
-        teams: gwTeams
+        teams: gwTeams.map(t => ({
+          teamId: t.teamId,
+          userName: t.userName,
+          points: t.points,
+          captaincyPoints: t.captaincyPoints,
+          isWinner: t.teamId === winner.teamId,
+          isSecond: t.teamId === second.teamId,
+          isLast: t.teamId === last.teamId,
+          isCapWinner: t.teamId === capWinner.teamId
+        }))
       })
     }
     
@@ -326,7 +351,7 @@ export async function GET() {
     })
     
     // Sort by total points (no hits) for final leaderboard
-    teamStats.sort((a, b) => b.totalPointsNoHits - a.totalPointsNoHits)
+    teamStats.sort((a, b) => (b.totalPointsNoHits || 0) - (a.totalPointsNoHits || 0))
     
     // Add positions
     const leaderboard = teamStats.map((team, index) => ({
