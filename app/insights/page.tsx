@@ -360,7 +360,7 @@ export default function InsightsPage() {
                 )}
               </TabsContent>
 
-              {/* Injuries Tab */}
+              {/* Injuries Tab - Concise Table Format */}
               <TabsContent value="injuries" className="space-y-6">
                 <Card className="bg-[#2B2D42] border-[#3d3f56]">
                   <CardHeader className="border-b border-[#3d3f56]">
@@ -369,43 +369,55 @@ export default function InsightsPage() {
                       Injury & Suspension News
                     </CardTitle>
                     <CardDescription className="text-gray-400">
-                      Players with reported fitness concerns
+                      All players with fitness concerns across teams
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="p-4">
+                  <CardContent className="p-0">
                     {injuries.length === 0 ? (
                       <p className="text-gray-400 text-center py-8">No injury news available</p>
                     ) : (
-                      <div className="space-y-6">
-                        {injuries.map((team) => (
-                          <div key={team.teamId} className="border border-[#3d3f56] rounded-lg p-4">
-                            <h3 className="font-bold text-lg mb-3 text-white">{team.teamName}</h3>
-                            <div className="space-y-2">
-                              {team.players.map((player) => (
-                                <div
-                                  key={player.id}
-                                  className="flex items-center justify-between p-3 bg-[#3d3f56]/50 rounded"
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span>{getStatusIcon(player.status, player.chanceOfPlaying)}</span>
-                                    <span className="font-medium text-white">{player.name}</span>
-                                  </div>
-                                  <div className="flex items-center gap-4">
-                                    <span className="text-sm text-gray-400 max-w-md truncate">
-                                      {player.news}
-                                    </span>
-                                    {player.chanceOfPlaying !== null && (
-                                      <Badge className={player.chanceOfPlaying >= 75 ? "bg-[#4DAA57]" : "bg-[#FF3A20]"}>
-                                        {player.chanceOfPlaying}%
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-[#3d3f56] hover:bg-transparent bg-[#1A1F16]">
+                            <TableHead className="text-white font-bold w-12">Status</TableHead>
+                            <TableHead className="text-white font-bold">Player</TableHead>
+                            <TableHead className="text-white font-bold w-32">Team</TableHead>
+                            <TableHead className="text-white font-bold w-20">Pos</TableHead>
+                            <TableHead className="text-white font-bold">News</TableHead>
+                            <TableHead className="text-white font-bold w-24 text-center">Chance</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {injuries.flatMap((team) => 
+                            team.players.map((player) => (
+                              <TableRow key={player.id} className="border-[#3d3f56] hover:bg-[#3d3f56]/20">
+                                <TableCell className="text-center">
+                                  {getStatusIcon(player.status, player.chanceOfPlaying)}
+                                </TableCell>
+                                <TableCell className="font-medium text-white">{player.name}</TableCell>
+                                <TableCell className="text-gray-300">{team.teamName}</TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className="text-xs border-gray-500 text-gray-300">
+                                    {player.position}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-sm text-gray-400 max-w-md truncate">
+                                  {player.news || 'No details available'}
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  {player.chanceOfPlaying !== null ? (
+                                    <Badge className={player.chanceOfPlaying >= 75 ? "bg-[#4DAA57]" : player.chanceOfPlaying >= 50 ? "bg-[#F7E733] text-[#2B2D42]" : "bg-[#FF3A20]"}>
+                                      {player.chanceOfPlaying}%
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-gray-600 text-xs">-</span>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
                     )}
                   </CardContent>
                 </Card>
@@ -415,6 +427,19 @@ export default function InsightsPage() {
               <TabsContent value="recommendations" className="space-y-6">
                 {recommendations ? (
                   <>
+                    {/* Show banner if recommendations are for next GW */}
+                    {recommendations.isForNextGameweek && (
+                      <Card className="bg-[#F7E733] border-[#F7E733]">
+                        <CardContent className="p-4 flex items-center gap-3">
+                          <Lightbulb className="h-6 w-6 text-[#2B2D42]" />
+                          <div>
+                            <p className="font-bold text-[#2B2D42]">Showing Next Gameweek Recommendations</p>
+                            <p className="text-sm text-[#2B2D42]/80">Current gameweek has ended. These picks are for GW{recommendations.currentGameweek}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                    
                     {/* Captain Picks */}
                     <Card className="bg-[#2B2D42] border-[#3d3f56]">
                       <CardHeader className="border-b border-[#3d3f56]">

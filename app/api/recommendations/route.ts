@@ -35,16 +35,22 @@ export async function GET() {
     const teamMap = new Map(bootstrap.teams.map((t) => [t.id, t]));
     const positionMap = new Map(bootstrap.element_types.map((p) => [p.id, p.singular_name_short]));
     
-    // Get current gameweek
+    // Get current gameweek - if current GW is finished, show recommendations for next GW
     const currentEvent = bootstrap.events.find((e) => e.is_current);
     const currentGw = currentEvent?.id || 1;
+    const isCurrentGwFinished = currentEvent?.finished || false;
+    
+    // If current GW has finished, show recommendations for the next GW
+    const targetGw = isCurrentGwFinished ? currentGw + 1 : currentGw;
+    const nextEvent = bootstrap.events.find((e) => e.id === targetGw);
+    const displayGw = nextEvent ? targetGw : currentGw;
 
-    // Calculate fixture difficulty for next 5 gameweeks
+    // Calculate fixture difficulty for next 5 gameweeks starting from target GW
     const teamFixtureDifficulty = new Map<number, number>();
     
     bootstrap.teams.forEach((team) => {
       const teamFixtures = fixtures
-        .filter((f) => (f.team_h === team.id || f.team_a === team.id) && f.event && f.event >= currentGw && f.event < currentGw + 5)
+        .filter((f) => (f.team_h === team.id || f.team_a === team.id) && f.event && f.event >= displayGw && f.event < displayGw + 5)
         .map((f) => f.team_h === team.id ? f.team_h_difficulty : f.team_a_difficulty);
       
       const avgDifficulty = teamFixtures.length > 0 
@@ -154,7 +160,8 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: {
-        currentGameweek: currentGw,
+        currentGameweek: displayGw,
+        isForNextGameweek: isCurrentGwFinished,
         recommendations: recommendations.slice(0, 50),
         bestTeam,
         differentials,
