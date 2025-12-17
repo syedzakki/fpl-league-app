@@ -223,18 +223,21 @@ export async function GET() {
         )
         
         // Calculate hits
-        const hitCost = Math.abs(gw.event_transfers_cost || 0)
+        const transfersCost = gw.event_transfers_cost || 0 // Negative value (e.g., -4, -8)
+        const hitCost = Math.abs(transfersCost)
         const hits = hitCost / 4
         
+        // FPL API: gw.points field ALREADY INCLUDES transfer costs (hits are already deducted)
+        // So to get points WITHOUT hits, we subtract the negative cost (which adds the positive value back)
         return {
           gameweek: gw.event,
-          points: gw.points, // Points before hits
-          pointsWithHits: gw.points + (gw.event_transfers_cost || 0), // With hits
+          points: gw.points - transfersCost, // Points WITHOUT hits (subtract negative = add positive)
+          pointsWithHits: gw.points, // Points WITH hits (FPL official - already includes hit deductions)
           totalPoints: gw.total_points,
           rank: gw.rank,
           overallRank: gw.overall_rank,
           transfers: gw.event_transfers || 0,
-          transfersCost: gw.event_transfers_cost || 0, // Negative value
+          transfersCost: transfersCost, // Negative value
           hits: hits,
           hitCost: hitCost, // Positive value for display
           captaincyPoints: cvPoints,

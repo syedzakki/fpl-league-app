@@ -161,8 +161,8 @@ export function processTeamTransfers(
     
     totalHits += hits
     totalHitCost += hitCostAbsolute
-    totalGwPoints += gw.points
-    totalGwPointsWithHits += transferData.gwPointsWithHits
+    totalGwPoints += transferData.gwPoints // Points WITHOUT hits
+    totalGwPointsWithHits += transferData.gwPointsWithHits // Points WITH hits (FPL official)
   })
   
   return {

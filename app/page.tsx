@@ -53,7 +53,7 @@ export default function Home() {
           position: team.leaderboardPos || 0,
           teamId: team.teamId,
           teamName: team.userName,
-          totalPoints: team.totalPointsNoHits || 0,
+          totalPoints: team.totalPoints || 0, // FPL Total (official points with hits)
           gwWins: team.gwWins || 0,
           secondFinishes: team.secondFinishes || 0,
           lastFinishes: team.lastFinishes || 0,
