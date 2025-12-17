@@ -128,7 +128,7 @@ export default function TransfersPage() {
                   ))}
                 </TabsList>
 
-                {selectedTeamData && (
+                {selectedTeamData && selectedTeam && (
                   <TabsContent value={selectedTeam} className="space-y-4">
                     {/* Team Summary */}
                     <Card className="bg-[#2B2D42] border-[#3d3f56]">

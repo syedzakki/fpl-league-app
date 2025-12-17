@@ -265,7 +265,14 @@ export async function GET() {
     })
     
     // Calculate GW winners, second place, last place, and captaincy winners for each GW
-    const gameweekResults = []
+    const gameweekResults: Array<{
+      gameweek: number
+      winner: any
+      second: any
+      last: any
+      capWinner: any
+      teams: any[]
+    }> = []
     
     for (let gw = 1; gw <= completedGameweeks; gw++) {
       const gwTeams = teamsData
@@ -346,7 +353,7 @@ export async function GET() {
     })
     
     // Sort by total points (no hits) for final leaderboard
-    teamStats.sort((a, b) => b.totalPointsNoHits - a.totalPointsNoHits)
+    teamStats.sort((a, b) => (b.totalPointsNoHits || 0) - (a.totalPointsNoHits || 0))
     
     // Add positions
     const leaderboard = teamStats.map((team, index) => ({
