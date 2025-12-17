@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BlurFade } from "@/components/ui/blur-fade"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { LeagueComparisonChart } from "@/components/charts/league-comparison-chart"
-import { RefreshCw, Calendar, AlertTriangle, TrendingUp, Star, Users, Target, BarChart3, ArrowRightLeft } from "lucide-react"
+import { RefreshCw, Calendar, AlertTriangle, TrendingUp, Star, Users, Target, BarChart3, ArrowRightLeft, Lightbulb } from "lucide-react"
 import { format } from "date-fns"
 import { GlobalRefresh } from "@/components/global-refresh"
 import { TopTransfersDisplay } from "@/components/top-transfers-display"
@@ -36,6 +36,7 @@ interface InjuryInfo {
   players: {
     id: number
     name: string
+    position: string
     news: string
     newsAdded: string | null
     chanceOfPlaying: number | null
@@ -60,6 +61,7 @@ interface PlayerRecommendation {
 
 interface RecommendationsData {
   currentGameweek: number
+  isForNextGameweek?: boolean
   recommendations: PlayerRecommendation[]
   bestTeam: {
     goalkeepers: PlayerRecommendation[]
@@ -88,6 +90,7 @@ export default function InsightsPage() {
   const [injuries, setInjuries] = useState<InjuryInfo[]>([])
   const [recommendations, setRecommendations] = useState<RecommendationsData | null>(null)
   const [leagueStats, setLeagueStats] = useState<LeagueStats[]>([])
+  const [teams, setTeams] = useState<any[]>([])
   const [currentGw, setCurrentGw] = useState<number>(1)
   const [completedGWs, setCompletedGWs] = useState<number>(0)
   const [loading, setLoading] = useState(true)
@@ -110,6 +113,7 @@ export default function InsightsPage() {
       if (fplData.success) {
         setFixtures(fplData.data.upcomingFixtures || [])
         setInjuries(fplData.data.injuries || [])
+        setTeams(fplData.data.teams || [])
         setCurrentGw(fplData.data.gameweek?.current || 1)
       }
       
