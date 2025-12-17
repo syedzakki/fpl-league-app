@@ -117,9 +117,9 @@ export default function InsightsPage() {
         setCurrentGw(fplData.data.gameweek?.current || 1)
         
         // Process all fixtures for FDR table
-        if (allFixtures && fplData.data.teams) {
+        if (allFixtures && fplData.data.teamStrengths) {
           const currentGw = fplData.data.gameweek?.current || 1
-          const teamMap = new Map(fplData.data.teams.map((t: any) => [t.id, t] as [number, any]))
+          const teamMap = new Map(fplData.data.teamStrengths.map((t: any) => [t.id, t] as [number, any]))
           
           const processedFixtures = allFixtures
             .filter((f: any) => f.event && f.event >= currentGw && f.event <= currentGw + 9)
@@ -129,8 +129,8 @@ export default function InsightsPage() {
               return {
                 id: f.id,
                 gameweek: f.event,
-                homeTeam: (homeTeam && homeTeam.short_name) ? homeTeam.short_name : '?',
-                awayTeam: (awayTeam && awayTeam.short_name) ? awayTeam.short_name : '?',
+                homeTeam: (homeTeam && homeTeam.shortName) ? homeTeam.shortName : '?',
+                awayTeam: (awayTeam && awayTeam.shortName) ? awayTeam.shortName : '?',
                 kickoff: f.kickoff_time,
                 finished: f.finished || false,
                 started: f.started || false,
@@ -142,7 +142,7 @@ export default function InsightsPage() {
             })
           
           setFixtures(processedFixtures)
-          setTeams(fplData.data.teams || [])
+          setTeams(fplData.data.teamStrengths || [])
         }
       }
       
@@ -344,10 +344,10 @@ export default function InsightsPage() {
                         <TableBody>
                           {teams.filter(t => t.id <= 20).sort((a, b) => a.name.localeCompare(b.name)).map(team => {
                             const teamFixtures = Object.entries(fixturesByGw).slice(0, 10).map(([gw, fixtures]) => {
-                              const fixture = fixtures.find(f => f.homeTeam === team.short_name || f.awayTeam === team.short_name)
+                              const fixture = fixtures.find(f => f.homeTeam === team.shortName || f.awayTeam === team.shortName)
                               if (!fixture) return { gw, opponent: '-', difficulty: 0, isHome: false }
                               
-                              const isHome = fixture.homeTeam === team.short_name
+                              const isHome = fixture.homeTeam === team.shortName
                               const opponent = isHome ? fixture.awayTeam : fixture.homeTeam
                               const difficulty = isHome ? fixture.homeDifficulty : fixture.awayDifficulty
                               
@@ -359,7 +359,7 @@ export default function InsightsPage() {
                             return (
                               <TableRow key={team.id} className="border-[#3d3f56] hover:bg-[#3d3f56]/20">
                                 <TableCell className="font-medium text-white sticky left-0 bg-[#2B2D42]">
-                                  {team.short_name}
+                                  {team.shortName}
                                 </TableCell>
                                 <TableCell className="text-center">
                                   <Badge variant="outline" className="text-xs border-gray-500 text-gray-300">
