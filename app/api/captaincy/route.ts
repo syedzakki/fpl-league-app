@@ -164,7 +164,21 @@ export async function GET() {
     const completedGameweeks = bootstrap.events.filter(e => e.finished).length
     
     // Fetch C+VC data for all completed gameweeks
-    const captaincyData = []
+    const captaincyData: Array<{
+      gameweek: number
+      teams: Array<{
+        teamId: string
+        userName: string
+        captainPoints: number
+        viceCaptainPoints: number
+        captainPlayed: boolean
+        viceCaptainPlayed: boolean
+        cvTotal: number
+        captainId: number
+        viceCaptainId: number
+      }>
+      winner: any
+    }> = []
     
     for (let gw = 1; gw <= completedGameweeks; gw++) {
       const liveData = await fetchLiveGameweek(gw)
