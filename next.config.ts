@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    // Disable unstable_prefetch to fix runtime error
+    clientRouterFilter: false,
+  },
 };
 
 export default nextConfig;
