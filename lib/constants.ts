@@ -52,7 +52,19 @@ export const FPL_API = {
   PLAYER: (playerId: number) => `https://fantasy.premierleague.com/api/element-summary/${playerId}/`,
 } as const;
 
-// FPL-Elo-Insights GitHub raw data URLs
+// FPL Core Insights GitHub raw data URLs (Updated repository)
+export const FPL_CORE_INSIGHTS = {
+  BASE_URL: "https://raw.githubusercontent.com/olbauday/FPL-Core-Insights/main/data/2024-25/",
+  PLAYERS: "players.csv",
+  PLAYER_STATS: "playerstats.csv",
+  PLAYER_MATCH_STATS: "playermatchstats.csv",
+  MATCHES: "matches.csv",
+  FIXTURES: "fixtures.csv",
+  TEAMS: "teams.csv",
+  GAMEWEEKS: "gameweeks.csv",
+} as const;
+
+// Legacy URL (kept for backwards compatibility)
 export const FPL_ELO_INSIGHTS = {
   BASE_URL: "https://raw.githubusercontent.com/olbauday/FPL-Elo-Insights/main/data/",
   PLAYERS: "players.csv",

@@ -99,7 +99,7 @@ export function processTeamTransfers(
     gameweek: number
     transfers: number
     transfersCost: number // From FPL API (negative value, e.g., -4, -8)
-    points: number // GW points before hits (FPL doesn't include hits in gameweek points)
+    points: number // GW points WITH hits already deducted (FPL API includes hit costs)
   }>,
   specialEvents?: Record<number, number> // Map of gameweek -> free transfers (for special events)
 ): TeamTransferHistory {
@@ -143,7 +143,8 @@ export function processTeamTransfers(
       previousFreeTransfers = Math.min(unusedFreeTransfers + 1, 2)
     }
     
-    // FPL API: points field does NOT include transfer costs
+    // FPL API: points field ALREADY INCLUDES transfer costs
+    // So to get points WITHOUT hits, we need to subtract the hit cost (add back the positive value)
     // transfersCost is negative (e.g., -4, -8)
     const transferData: TransferData = {
       gameweek: gw.gameweek,
@@ -152,8 +153,8 @@ export function processTeamTransfers(
       freeTransfersUsed,
       hits,
       hitCost: transfersCostNegative, // Keep original negative value for display
-      gwPoints: gw.points, // Points without hits
-      gwPointsWithHits: gw.points + transfersCostNegative, // Points with hits (add negative value)
+      gwPoints: gw.points - transfersCostNegative, // Points without hits (subtract negative = add positive)
+      gwPointsWithHits: gw.points, // Points with hits (this is what FPL API gives us)
     }
     
     transfers.push(transferData)

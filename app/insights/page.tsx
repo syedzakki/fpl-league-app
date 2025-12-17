@@ -145,11 +145,13 @@ export default function InsightsPage() {
     return () => clearInterval(interval)
   }, [])
 
+  // Enhanced FDR color mapping based on FPL Core Insights methodology
   const getDifficultyColor = (difficulty: number) => {
-    if (difficulty <= 2) return "bg-[#4DAA57] text-white"
-    if (difficulty === 3) return "bg-[#F7E733] text-[#2B2D42]"
-    if (difficulty === 4) return "bg-orange-500 text-white"
-    return "bg-[#FF3A20] text-white"
+    if (difficulty === 1) return "bg-[#00FF87] text-[#2B2D42]" // Very Easy - Bright Green
+    if (difficulty === 2) return "bg-[#4DAA57] text-white" // Easy - Green
+    if (difficulty === 3) return "bg-[#F7E733] text-[#2B2D42]" // Medium - Yellow
+    if (difficulty === 4) return "bg-[#FF6B35] text-white" // Hard - Orange
+    return "bg-[#FF3A20] text-white" // Very Hard - Red (5)
   }
 
   const getRecommendationColor = (rec: string) => {
@@ -255,65 +257,98 @@ export default function InsightsPage() {
                 )}
               </TabsContent>
 
-              {/* Schedule Tab */}
+              {/* Schedule Tab - FDR Matrix */}
               <TabsContent value="schedule" className="space-y-6">
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center justify-between mb-4">
                   <Badge className="text-sm px-3 py-1 bg-[#2B2D42] border border-[#F7E733] text-[#F7E733]">
                     Current: GW{currentGw}
                   </Badge>
                   <div className="flex gap-3 text-sm text-gray-400">
                     <span className="flex items-center gap-1">
-                      <span className="w-3 h-3 rounded bg-[#4DAA57]"></span> Easy
+                      <span className="w-3 h-3 rounded bg-[#00FF87]"></span> 1
                     </span>
                     <span className="flex items-center gap-1">
-                      <span className="w-3 h-3 rounded bg-[#F7E733]"></span> Medium
+                      <span className="w-3 h-3 rounded bg-[#4DAA57]"></span> 2
                     </span>
                     <span className="flex items-center gap-1">
-                      <span className="w-3 h-3 rounded bg-[#FF3A20]"></span> Hard
+                      <span className="w-3 h-3 rounded bg-[#F7E733]"></span> 3
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-3 h-3 rounded bg-[#FF6B35]"></span> 4
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-3 h-3 rounded bg-[#FF3A20]"></span> 5
                     </span>
                   </div>
                 </div>
 
                 {Object.keys(fixturesByGw).length > 0 ? (
-                  Object.entries(fixturesByGw).map(([gw, gwFixtures]) => (
-                    <Card key={gw} className="bg-[#2B2D42] border-[#3d3f56]">
-                      <CardHeader className="border-b border-[#3d3f56]">
-                        <CardTitle className="flex items-center gap-2 text-white">
-                          <Calendar className="h-5 w-5 text-[#F7E733]" />
-                          Gameweek {gw}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {gwFixtures.map((fixture) => (
-                            <div
-                              key={fixture.id}
-                              className="flex items-center justify-between p-3 border border-[#3d3f56] rounded-lg bg-[#3d3f56]/30"
-                            >
-                              <div className="flex items-center gap-2">
-                                <Badge className={getDifficultyColor(fixture.awayDifficulty)}>
-                                  {fixture.homeTeam}
-                                </Badge>
-                                <span className="font-bold text-white">
-                                  {fixture.finished
-                                    ? `${fixture.homeScore} - ${fixture.awayScore}`
-                                    : "vs"}
-                                </span>
-                                <Badge className={getDifficultyColor(fixture.homeDifficulty)}>
-                                  {fixture.awayTeam}
-                                </Badge>
-                              </div>
-                              <div className="text-xs text-gray-400">
-                                {fixture.kickoff
-                                  ? format(new Date(fixture.kickoff), "EEE MMM d, HH:mm")
-                                  : "TBC"}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
+                  <Card className="bg-[#2B2D42] border-[#3d3f56] overflow-x-auto">
+                    <CardHeader className="border-b border-[#3d3f56]">
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <Calendar className="h-5 w-5 text-[#F7E733]" />
+                        Fixture Difficulty Rating (FDR)
+                      </CardTitle>
+                      <CardDescription className="text-gray-400">
+                        Next 10 gameweeks - Color-coded by difficulty
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-[#3d3f56] hover:bg-transparent bg-[#1A1F16]">
+                            <TableHead className="text-white font-bold w-24 sticky left-0 bg-[#1A1F16]">Team</TableHead>
+                            <TableHead className="text-white font-bold w-20 bg-[#1A1F16]">Rank</TableHead>
+                            {Object.keys(fixturesByGw).slice(0, 10).map(gw => (
+                              <TableHead key={gw} className="text-center text-white font-bold min-w-[80px]">
+                                GW {gw}
+                              </TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {teams.filter(t => t.id <= 20).sort((a, b) => a.name.localeCompare(b.name)).map(team => {
+                            const teamFixtures = Object.entries(fixturesByGw).slice(0, 10).map(([gw, fixtures]) => {
+                              const fixture = fixtures.find(f => f.homeTeam === team.short_name || f.awayTeam === team.short_name)
+                              if (!fixture) return { gw, opponent: '-', difficulty: 0, isHome: false }
+                              
+                              const isHome = fixture.homeTeam === team.short_name
+                              const opponent = isHome ? fixture.awayTeam : fixture.homeTeam
+                              const difficulty = isHome ? fixture.homeDifficulty : fixture.awayDifficulty
+                              
+                              return { gw, opponent, difficulty, isHome }
+                            })
+                            
+                            const avgDifficulty = teamFixtures.reduce((sum, f) => sum + f.difficulty, 0) / teamFixtures.length
+                            
+                            return (
+                              <TableRow key={team.id} className="border-[#3d3f56] hover:bg-[#3d3f56]/20">
+                                <TableCell className="font-medium text-white sticky left-0 bg-[#2B2D42]">
+                                  {team.short_name}
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  <Badge variant="outline" className="text-xs border-gray-500 text-gray-300">
+                                    {team.id}
+                                  </Badge>
+                                </TableCell>
+                                {teamFixtures.map(({ gw, opponent, difficulty, isHome }) => (
+                                  <TableCell key={gw} className="p-1 text-center">
+                                    {opponent !== '-' ? (
+                                      <div className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyColor(difficulty)}`}>
+                                        {opponent} {isHome ? '(H)' : '(A)'}
+                                      </div>
+                                    ) : (
+                                      <span className="text-gray-600 text-xs">-</span>
+                                    )}
+                                  </TableCell>
+                                ))}
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
                 ) : (
                   <Card className="bg-[#2B2D42] border-[#3d3f56]">
                     <CardContent className="p-8 text-center">
