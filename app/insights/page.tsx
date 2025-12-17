@@ -99,28 +99,28 @@ export default function InsightsPage() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      
+
       const [fplResponse, recsResponse, fplDataResponse, fixturesResponse] = await Promise.all([
         fetch("/api/fpl"),
         fetch("/api/recommendations"),
         fetch("/api/fpl-data"),
-        fetch("https://fantasy.premierleague.com/api/fixtures/"),
+        fetch("/api/fixtures"),
       ])
-      
+
       const fplData = await fplResponse.json()
       const recsData = await recsResponse.json()
       const fplLeagueData = await fplDataResponse.json()
       const allFixtures = await fixturesResponse.json()
-      
+
       if (fplData.success) {
         setInjuries(fplData.data.injuries || [])
         setCurrentGw(fplData.data.gameweek?.current || 1)
-        
-        // Process all fixtures for FDR table
+
+        // Process fixtures
         if (allFixtures && fplData.data.teamStrengths) {
           const currentGw = fplData.data.gameweek?.current || 1
           const teamMap = new Map(fplData.data.teamStrengths.map((t: any) => [t.id, t] as [number, any]))
-          
+
           const processedFixtures = allFixtures
             .filter((f: any) => f.event && f.event >= currentGw && f.event <= currentGw + 9)
             .map((f: any) => {
@@ -140,17 +140,17 @@ export default function InsightsPage() {
                 awayDifficulty: f.team_a_difficulty || 3,
               }
             })
-          
+
           setFixtures(processedFixtures)
           setTeams(fplData.data.teamStrengths || [])
         }
       }
-      
+
       if (recsData.success) {
         setRecommendations(recsData.data)
       }
-      
-      // Use FPL API data instead of Google Sheets for accurate totals
+
+      // Use FPL API data for league stats
       if (fplLeagueData.success && fplLeagueData.data?.leaderboard) {
         const completedGWs = fplLeagueData.data.completedGameweeks || 0
         const stats: LeagueStats[] = fplLeagueData.data.leaderboard.map((item: any) => ({
@@ -159,16 +159,17 @@ export default function InsightsPage() {
           secondFinishes: item.secondFinishes || 0,
           lastFinishes: item.lastFinishes || 0,
           captaincyWins: item.captaincyWins || 0,
-          totalPoints: item.totalPoints || 0, // FPL Total (official with hits)
-          averagePoints: completedGWs 
+          totalPoints: item.totalPoints || 0,
+          averagePoints: completedGWs
             ? Math.round((item.totalPoints || 0) / completedGWs)
             : 0,
         }))
+
         setLeagueStats(stats)
         setCompletedGWs(completedGWs)
       }
     } catch (error) {
-      console.error("Error fetching insights:", error)
+      console.error("❌ Error fetching insights:", error)
     } finally {
       setLoading(false)
     }
@@ -226,9 +227,9 @@ export default function InsightsPage() {
               <p className="text-sm text-[#19297C] dark:text-[#DBC2CF]">League analytics, schedule, injuries, and recommendations</p>
             </div>
             <div className="flex gap-2">
-              <Button 
-                onClick={fetchData} 
-                disabled={loading} 
+              <Button
+                onClick={fetchData}
+                disabled={loading}
                 variant="outline"
                 className="bg-[#19297C] border-[#028090] hover:bg-[#028090] hover:border-[#F26430] text-white"
               >
@@ -346,16 +347,16 @@ export default function InsightsPage() {
                             const teamFixtures = Object.entries(fixturesByGw).slice(0, 10).map(([gw, fixtures]) => {
                               const fixture = fixtures.find(f => f.homeTeam === team.shortName || f.awayTeam === team.shortName)
                               if (!fixture) return { gw, opponent: '-', difficulty: 0, isHome: false }
-                              
+
                               const isHome = fixture.homeTeam === team.shortName
                               const opponent = isHome ? fixture.awayTeam : fixture.homeTeam
                               const difficulty = isHome ? fixture.homeDifficulty : fixture.awayDifficulty
-                              
+
                               return { gw, opponent, difficulty, isHome }
                             })
-                            
+
                             const avgDifficulty = teamFixtures.reduce((sum, f) => sum + f.difficulty, 0) / teamFixtures.length
-                            
+
                             return (
                               <TableRow key={team.id} className="border-[#3d3f56] hover:bg-[#3d3f56]/20">
                                 <TableCell className="font-medium text-white sticky left-0 bg-[#2B2D42]">
@@ -423,7 +424,7 @@ export default function InsightsPage() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {injuries.flatMap((team) => 
+                          {injuries.flatMap((team) =>
                             team.players.map((player) => (
                               <TableRow key={player.id} className="border-[#3d3f56] hover:bg-[#3d3f56]/20">
                                 <TableCell className="text-center">
@@ -474,7 +475,7 @@ export default function InsightsPage() {
                         </CardContent>
                       </Card>
                     )}
-                    
+
                     {/* Captain Picks */}
                     <Card className="bg-[#2B2D42] border-[#3d3f56]">
                       <CardHeader className="border-b border-[#3d3f56]">
