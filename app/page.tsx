@@ -1,13 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { LeaderboardTable } from "@/components/leaderboard-table"
+import { useEffect, useState, useRef } from "react"
+import { InteractiveLeaderboard } from "@/components/interactive-leaderboard"
 import { PositionHistoryChart } from "@/components/charts/position-history-chart"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { BlurFade } from "@/components/ui/blur-fade"
 import { NumberTicker } from "@/components/ui/number-ticker"
 import { LoadingSpinner, SkeletonCard, SkeletonTable } from "@/components/ui/loading-spinner"
+import { useToast } from "@/components/ui/toast"
 import Link from "next/link"
 import { 
   Trophy, 
@@ -18,7 +19,8 @@ import {
   Calendar, 
   Lightbulb, 
   Zap,
-  Crown
+  Crown,
+  Radio
 } from "lucide-react"
 import type { LeaderboardEntry } from "@/lib/types"
 import { LEAGUE_CONFIG } from "@/lib/constants"
@@ -31,6 +33,7 @@ interface PositionData {
 
 export default function Home() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [previousLeaderboard, setPreviousLeaderboard] = useState<LeaderboardEntry[]>([])
   const [positionHistory, setPositionHistory] = useState<PositionData[]>([])
   const [players, setPlayers] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,10 +41,16 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
   const [completedGWs, setCompletedGWs] = useState(0)
   const [totalPot, setTotalPot] = useState(0)
+  const [isLive, setIsLive] = useState(false)
+  const { addToast } = useToast()
+  const previousLeaderRef = useRef<string | null>(null)
 
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = async (showNotifications = false) => {
     try {
-      setLoading(true)
+      const isInitialLoad = loading
+      if (!isInitialLoad) {
+        setLoading(false) // Don't show loading spinner on auto-refresh
+      }
       setError(null)
       
       const response = await fetch("/api/fpl-data")
@@ -52,17 +61,59 @@ export default function Home() {
           position: team.leaderboardPos || 0,
           teamId: team.teamId,
           teamName: team.userName,
-          totalPoints: team.totalPoints || 0, // FPL total (with hits) - matches official FPL app
+          totalPoints: team.totalPoints || 0,
           gwWins: team.gwWins || 0,
           secondFinishes: team.secondFinishes || 0,
           lastFinishes: team.lastFinishes || 0,
           captaincyWins: team.captaincyWins || 0,
           netFinancial: 0,
         }))
+        
+        // Detect changes and show notifications
+        if (showNotifications && leaderboard.length > 0) {
+          // Check for leader change
+          const currentLeader = entries[0]
+          const previousLeader = leaderboard[0]
+          
+          if (currentLeader && previousLeader && currentLeader.teamId !== previousLeader.teamId) {
+            addToast({
+              title: "👑 New Leader!",
+              description: `${currentLeader.teamName} has taken the lead with ${currentLeader.totalPoints} points!`,
+              variant: "success",
+              duration: 5000
+            })
+          }
+          
+          // Check for position changes
+          entries.forEach(entry => {
+            const prev = leaderboard.find(t => t.teamId === entry.teamId)
+            if (prev && prev.position !== entry.position) {
+              const change = prev.position - entry.position
+              if (Math.abs(change) >= 2) { // Only notify for significant changes
+                addToast({
+                  title: change > 0 ? "📈 Position Up!" : "📉 Position Down",
+                  description: `${entry.teamName} moved ${Math.abs(change)} places to ${entry.position}${entry.position === 1 ? 'st' : entry.position === 2 ? 'nd' : entry.position === 3 ? 'rd' : 'th'}!`,
+                  variant: change > 0 ? "success" : "warning",
+                  duration: 4000
+                })
+              }
+            }
+          })
+        }
+        
+        // Save previous state
+        if (leaderboard.length > 0) {
+          setPreviousLeaderboard([...leaderboard])
+        }
+        
         setLeaderboard(entries)
         
         const gwCount = data.data.completedGameweeks || 0
         setCompletedGWs(gwCount)
+        
+        // Check if gameweek is currently live (you can adjust this logic)
+        const currentGW = data.data.currentGameweek || gwCount
+        setIsLive(currentGW > gwCount && currentGW <= gwCount + 1)
         
         const numTeams = entries.length
         const pot = numTeams * LEAGUE_CONFIG.FPL_BUY_IN + 
@@ -130,8 +181,14 @@ export default function Home() {
   }
 
   useEffect(() => {
-    fetchLeaderboard()
-    const interval = setInterval(fetchLeaderboard, 5 * 60 * 1000)
+    // Initial fetch
+    fetchLeaderboard(false)
+    
+    // Auto-refresh every 60 seconds with notifications
+    const interval = setInterval(() => {
+      fetchLeaderboard(true)
+    }, 60 * 1000)
+    
     return () => clearInterval(interval)
   }, [])
 
@@ -162,13 +219,19 @@ export default function Home() {
                       Updated {lastUpdated.toLocaleTimeString()}
                     </span>
                   )}
-                  {!loading && (
-                    <span className="flex items-center gap-1.5 text-[#028090]">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#028090] opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#028090]"></span>
+                  {!loading && isLive && (
+                    <span className="flex items-center gap-1.5 text-[#F26430]">
+                      <span className="relative flex h-2 w-2 live-pulse">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F26430] opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F26430]"></span>
                       </span>
-                      Live
+                      <Radio className="w-3 h-3" />
+                      LIVE
+                    </span>
+                  )}
+                  {!loading && !isLive && (
+                    <span className="text-[#028090] text-xs font-medium">
+                      Auto-updating
                     </span>
                   )}
                 </div>
@@ -200,7 +263,7 @@ export default function Home() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {/* Teams Card */}
             <BlurFade delay={0.05}>
-              <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
+              <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C] hover-lift smooth-transition">
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between">
                     <div>
@@ -219,7 +282,7 @@ export default function Home() {
 
             {/* Gameweeks Card */}
             <BlurFade delay={0.1}>
-              <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
+              <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C] hover-lift smooth-transition">
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between">
                     <div>
@@ -238,7 +301,7 @@ export default function Home() {
 
             {/* Total Pot Card */}
             <BlurFade delay={0.15}>
-              <Card className="bg-white dark:bg-[#1A1F16] border-[#028090] dark:border-[#028090]/50">
+              <Card className="bg-white dark:bg-[#1A1F16] border-[#028090] dark:border-[#028090]/50 hover-lift smooth-transition">
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between">
                     <div>
@@ -257,7 +320,7 @@ export default function Home() {
 
             {/* Leader Card */}
             <BlurFade delay={0.2}>
-              <Card className="bg-white dark:bg-[#1A1F16] border-[#F26430] dark:border-[#F26430]/50">
+              <Card className="bg-white dark:bg-[#1A1F16] border-[#F26430] dark:border-[#F26430]/50 hover-lift smooth-transition badge-glow">
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between">
                     <div>
@@ -296,7 +359,7 @@ export default function Home() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="group flex flex-col items-center justify-center gap-2 p-4 rounded-lg bg-white dark:bg-[#1A1F16] border border-[#DBC2CF] dark:border-[#19297C] hover:border-[#F26430] dark:hover:border-[#028090] transition-all duration-200 hover:scale-105"
+                  className="group flex flex-col items-center justify-center gap-2 p-4 rounded-lg bg-white dark:bg-[#1A1F16] border border-[#DBC2CF] dark:border-[#19297C] hover:border-[#F26430] dark:hover:border-[#028090] smooth-transition hover-lift touch-feedback"
                 >
                   <item.Icon
                     className="h-6 w-6 transition-colors"
@@ -330,7 +393,10 @@ export default function Home() {
                 </Button>
               </Card>
             ) : leaderboard.length > 0 ? (
-              <LeaderboardTable entries={leaderboard.slice(0, 6)} />
+              <InteractiveLeaderboard 
+                data={leaderboard} 
+                previousData={previousLeaderboard.length > 0 ? previousLeaderboard : undefined}
+              />
             ) : (
               <Card className="p-8 text-center bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
                 <p className="text-[#19297C] dark:text-[#DBC2CF]">No data available</p>
