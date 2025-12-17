@@ -119,18 +119,18 @@ export default function InsightsPage() {
         // Process all fixtures for FDR table
         if (allFixtures && fplData.data.teams) {
           const currentGw = fplData.data.gameweek?.current || 1
-          const teamMap = new Map(fplData.data.teams.map((t: any) => [t.id, t]))
+          const teamMap = new Map(fplData.data.teams.map((t: any) => [t.id, t] as [number, any]))
           
           const processedFixtures = allFixtures
             .filter((f: any) => f.event && f.event >= currentGw && f.event <= currentGw + 9)
             .map((f: any) => {
-              const homeTeam = teamMap.get(f.team_h)
-              const awayTeam = teamMap.get(f.team_a)
+              const homeTeam: any = teamMap.get(f.team_h)
+              const awayTeam: any = teamMap.get(f.team_a)
               return {
                 id: f.id,
                 gameweek: f.event,
-                homeTeam: homeTeam?.short_name || '?',
-                awayTeam: awayTeam?.short_name || '?',
+                homeTeam: (homeTeam && homeTeam.short_name) ? homeTeam.short_name : '?',
+                awayTeam: (awayTeam && awayTeam.short_name) ? awayTeam.short_name : '?',
                 kickoff: f.kickoff_time,
                 finished: f.finished || false,
                 started: f.started || false,
