@@ -13,6 +13,7 @@ import { BlurFade } from "@/components/ui/blur-fade"
 import { DeadlineCountdown } from "@/components/deadline-countdown"
 import { FixturesDisplay } from "@/components/fixtures-display"
 import { GlobalRefresh } from "@/components/global-refresh"
+import { cn } from "@/lib/utils"
 
 interface TeamResult {
   teamId: string
@@ -54,12 +55,10 @@ export default function GameweeksPage() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      
-      // Fetch gameweek results
+
       const fplDataResponse = await fetch("/api/fpl-data")
       const fplData = await fplDataResponse.json()
-      
-      // Fetch fixtures
+
       const fixturesResponse = await fetch("/api/fpl")
       const fixturesData = await fixturesResponse.json()
 
@@ -75,10 +74,10 @@ export default function GameweeksPage() {
           isLive: false,
           isFinished: true,
         }))
-        
+
         setGameweeks(gwData)
         setCurrentGW(fplData.data.currentGameweek || 1)
-        
+
         if (!selectedGW && gwData.length > 0) {
           setSelectedGW(gwData[gwData.length - 1].gameweek)
         }
@@ -87,8 +86,7 @@ export default function GameweeksPage() {
       if (fixturesData.success) {
         const allFixtures = fixturesData.data.fixtures || []
         setFixtures(allFixtures)
-        
-        // Get next deadline
+
         const upcomingEvents = fixturesData.data.events?.filter((e: any) => !e.finished) || []
         if (upcomingEvents.length > 0) {
           setNextDeadline(upcomingEvents[0].deadline_time)
@@ -103,18 +101,17 @@ export default function GameweeksPage() {
 
   useEffect(() => {
     fetchData()
-    // Refresh every 2 minutes for live updates
     const interval = setInterval(fetchData, 2 * 60 * 1000)
     return () => clearInterval(interval)
   }, [])
 
   const currentGameweek = gameweeks.find(gw => gw.gameweek === selectedGW)
-  const currentFixtures = fixtures.filter(f => f.id === selectedGW) // This would need proper gameweek matching
+  const currentFixtures = fixtures.filter(f => f.id === selectedGW)
 
   const calculateWinners = (gw: GameweekData) => {
     const sortedByPoints = [...gw.teams].sort((a, b) => b.points - a.points)
     const sortedByCaptaincy = [...gw.teams].sort((a, b) => b.captaincyPoints - a.captaincyPoints)
-    
+
     return {
       winner: sortedByPoints[0],
       second: sortedByPoints[1],
@@ -122,35 +119,27 @@ export default function GameweeksPage() {
       captaincyWinner: sortedByCaptaincy[0],
       gwPot: LEAGUE_CONFIG.NUM_PLAYERS * LEAGUE_CONFIG.GW_BUY_IN,
       captaincyPot: LEAGUE_CONFIG.NUM_PLAYERS * LEAGUE_CONFIG.CAPTAINCY_BUY_IN,
-      winnerPayout: LEAGUE_CONFIG.NUM_PLAYERS * LEAGUE_CONFIG.GW_BUY_IN - 
-                    LEAGUE_CONFIG.SECOND_PLACE_BONUS - 
-                    Math.abs(LEAGUE_CONFIG.LAST_PLACE_PENALTY),
+      winnerPayout: LEAGUE_CONFIG.NUM_PLAYERS * LEAGUE_CONFIG.GW_BUY_IN -
+        LEAGUE_CONFIG.SECOND_PLACE_BONUS -
+        Math.abs(LEAGUE_CONFIG.LAST_PLACE_PENALTY),
     }
   }
 
   const winners = currentGameweek ? calculateWinners(currentGameweek) : null
 
   return (
-    <div className="min-h-screen bg-[#FFFCF2] dark:bg-[#1A1F16]">
-      <div className="container mx-auto px-4 py-6">
-        {/* Header */}
+    <div className="min-h-screen bg-background pb-20 md:pb-6">
+      <div className="container mx-auto px-4 py-8">
         <BlurFade delay={0}>
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-[#1A1F16] dark:text-[#FFFCF2]">Gameweeks</h1>
-              <p className="text-sm text-[#19297C] dark:text-[#DBC2CF]">
-                Results and live updates
-              </p>
+              <h1 className="text-3xl font-sports font-bold uppercase italic tracking-wide">Gameweek Central</h1>
+              <p className="text-sm text-muted-foreground mt-1">Live scores, results, and payouts</p>
             </div>
             <div className="flex gap-2">
-              <Button 
-                onClick={fetchData} 
-                disabled={loading} 
-                variant="outline"
-                className="bg-[#19297C] border-[#028090] hover:bg-[#028090] text-white"
-              >
-                <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                Refresh
+              <Button onClick={fetchData} disabled={loading} variant="outline" size="sm" className="gap-2">
+                <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+                Sync
               </Button>
               <GlobalRefresh />
             </div>
@@ -158,30 +147,28 @@ export default function GameweeksPage() {
         </BlurFade>
 
         {loading ? (
-          <LoadingSpinner text="Loading gameweeks" />
+          <LoadingSpinner text="Loading gameweeks..." />
         ) : (
-          <div className="space-y-6">
-            {/* Deadline Countdown */}
+          <div className="space-y-8">
             {nextDeadline && (
               <BlurFade delay={0.05}>
                 <DeadlineCountdown deadline={nextDeadline} />
               </BlurFade>
             )}
 
-            {/* Gameweek Selector */}
             <BlurFade delay={0.1}>
-              <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
-                <CardHeader className="py-4 border-b border-[#DBC2CF] dark:border-[#19297C]">
+              <Card className="border-border/50">
+                <CardHeader className="py-4 border-b border-border/50">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-[#1A1F16] dark:text-[#FFFCF2] flex items-center gap-2">
-                      <Calendar className="h-5 w-5" />
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Calendar className="h-5 w-5 text-primary" />
                       Select Gameweek
                     </CardTitle>
-                    <Select 
-                      value={selectedGW?.toString()} 
+                    <Select
+                      value={selectedGW?.toString()}
                       onValueChange={(val) => setSelectedGW(parseInt(val))}
                     >
-                      <SelectTrigger className="w-32 bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
+                      <SelectTrigger className="w-32 bg-card border-border/50">
                         <SelectValue placeholder="GW" />
                       </SelectTrigger>
                       <SelectContent>
@@ -190,16 +177,7 @@ export default function GameweeksPage() {
                             <div className="flex items-center gap-2">
                               <span>GW {gw.gameweek}</span>
                               {gw.isLive && (
-                                <Badge className="bg-[#F26430] text-white text-xs">
-                                  <Radio className="h-2 w-2 mr-1" />
-                                  LIVE
-                                </Badge>
-                              )}
-                              {gw.isFinished && (
-                                <Badge variant="outline" className="text-xs">
-                                  <CheckCircle2 className="h-2 w-2 mr-1" />
-                                  Ended
-                                </Badge>
+                                <Badge className="bg-destructive text-destructive-foreground text-[10px] uppercase font-bold px-1 py-0">LIVE</Badge>
                               )}
                             </div>
                           </SelectItem>
@@ -213,75 +191,83 @@ export default function GameweeksPage() {
 
             {currentGameweek && winners && (
               <>
-                {/* Winners Summary */}
                 <BlurFade delay={0.15}>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <Card className="bg-[#F26430]/10 border-[#F26430]">
-                      <CardContent className="p-4">
+                    <Card className="bg-yellow-500/10 border-yellow-500/30 overflow-hidden relative">
+                      <div className="absolute top-0 right-0 p-2 opacity-10"><Trophy className="w-16 h-16" /></div>
+                      <CardContent className="p-4 relative z-10">
                         <div className="flex items-center gap-2 mb-2">
-                          <Trophy className="h-4 w-4 text-[#F26430]" />
-                          <span className="text-xs font-medium text-[#19297C] dark:text-[#DBC2CF] uppercase">Winner</span>
+                          <Trophy className="h-4 w-4 text-yellow-500" />
+                          <span className="text-xs font-bold text-yellow-500 uppercase tracking-wider">Witness Greatness</span>
                         </div>
-                        <p className="font-bold text-lg text-[#1A1F16] dark:text-[#FFFCF2]">{winners.winner.userName}</p>
-                        <p className="text-sm text-[#F26430] font-mono font-bold">{winners.winner.points} pts</p>
-                        <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] mt-1">+₹{winners.winnerPayout}</p>
+                        <p className="font-sports font-bold text-xl">{winners.winner.userName}</p>
+                        <div className="flex items-baseline justify-between mt-2">
+                          <span className="text-2xl font-mono font-bold text-yellow-500">{winners.winner.points} pts</span>
+                          <span className="text-xs font-mono text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded">+₹{winners.winnerPayout}</span>
+                        </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-[#028090]/10 border-[#028090]">
-                      <CardContent className="p-4">
+                    <Card className="bg-slate-400/10 border-slate-400/30 overflow-hidden relative">
+                      <div className="absolute top-0 right-0 p-2 opacity-10"><Medal className="w-16 h-16" /></div>
+                      <CardContent className="p-4 relative z-10">
                         <div className="flex items-center gap-2 mb-2">
-                          <Medal className="h-4 w-4 text-[#028090]" />
-                          <span className="text-xs font-medium text-[#19297C] dark:text-[#DBC2CF] uppercase">2nd Place</span>
+                          <Medal className="h-4 w-4 text-slate-400" />
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">So Close</span>
                         </div>
-                        <p className="font-bold text-lg text-[#1A1F16] dark:text-[#FFFCF2]">{winners.second.userName}</p>
-                        <p className="text-sm text-[#028090] font-mono font-bold">{winners.second.points} pts</p>
-                        <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] mt-1">+₹{LEAGUE_CONFIG.SECOND_PLACE_BONUS}</p>
+                        <p className="font-sports font-bold text-xl">{winners.second.userName}</p>
+                        <div className="flex items-baseline justify-between mt-2">
+                          <span className="text-2xl font-mono font-bold text-slate-400">{winners.second.points} pts</span>
+                          <span className="text-xs font-mono text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded">+₹{LEAGUE_CONFIG.SECOND_PLACE_BONUS}</span>
+                        </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-red-500/10 border-red-500">
-                      <CardContent className="p-4">
+                    <Card className="bg-red-500/10 border-red-500/30 overflow-hidden relative">
+                      <div className="absolute top-0 right-0 p-2 opacity-10"><AlertCircle className="w-16 h-16" /></div>
+                      <CardContent className="p-4 relative z-10">
                         <div className="flex items-center gap-2 mb-2">
                           <AlertCircle className="h-4 w-4 text-red-500" />
-                          <span className="text-xs font-medium text-[#19297C] dark:text-[#DBC2CF] uppercase">Last Place</span>
+                          <span className="text-xs font-bold text-red-500 uppercase tracking-wider">Absolute Stinker</span>
                         </div>
-                        <p className="font-bold text-lg text-[#1A1F16] dark:text-[#FFFCF2]">{winners.last.userName}</p>
-                        <p className="text-sm text-red-500 font-mono font-bold">{winners.last.points} pts</p>
-                        <p className="text-xs text-red-500 mt-1">-₹{Math.abs(LEAGUE_CONFIG.LAST_PLACE_PENALTY)}</p>
+                        <p className="font-sports font-bold text-xl">{winners.last.userName}</p>
+                        <div className="flex items-baseline justify-between mt-2">
+                          <span className="text-2xl font-mono font-bold text-red-500">{winners.last.points} pts</span>
+                          <span className="text-xs font-mono text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded">-₹{Math.abs(LEAGUE_CONFIG.LAST_PLACE_PENALTY)}</span>
+                        </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-[#19297C]/10 border-[#19297C]">
-                      <CardContent className="p-4">
+                    <Card className="bg-primary/10 border-primary/30 overflow-hidden relative">
+                      <div className="absolute top-0 right-0 p-2 opacity-10"><TrendingUp className="w-16 h-16" /></div>
+                      <CardContent className="p-4 relative z-10">
                         <div className="flex items-center gap-2 mb-2">
-                          <TrendingUp className="h-4 w-4 text-[#19297C] dark:text-[#028090]" />
-                          <span className="text-xs font-medium text-[#19297C] dark:text-[#DBC2CF] uppercase">C+VC Winner</span>
+                          <TrendingUp className="h-4 w-4 text-primary" />
+                          <span className="text-xs font-bold text-primary uppercase tracking-wider">Captain Ball</span>
                         </div>
-                        <p className="font-bold text-lg text-[#1A1F16] dark:text-[#FFFCF2]">{winners.captaincyWinner.userName}</p>
-                        <p className="text-sm text-[#19297C] dark:text-[#028090] font-mono font-bold">{winners.captaincyWinner.captaincyPoints} pts</p>
-                        <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] mt-1">+₹{winners.captaincyPot}</p>
+                        <p className="font-sports font-bold text-xl">{winners.captaincyWinner.userName}</p>
+                        <div className="flex items-baseline justify-between mt-2">
+                          <span className="text-2xl font-mono font-bold text-primary">{winners.captaincyWinner.captaincyPoints} pts</span>
+                          <span className="text-xs font-mono text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded">+₹{winners.captaincyPot}</span>
+                        </div>
                       </CardContent>
                     </Card>
                   </div>
                 </BlurFade>
 
-                {/* Leaderboard Table */}
                 <BlurFade delay={0.2}>
-                  <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
-                    <CardHeader className="border-b border-[#DBC2CF] dark:border-[#19297C]">
-                      <CardTitle className="text-[#1A1F16] dark:text-[#FFFCF2]">
-                        Gameweek {selectedGW} Results
-                      </CardTitle>
+                  <Card className="overflow-hidden">
+                    <CardHeader className="py-4 px-6 border-b border-border/50">
+                      <CardTitle className="text-base uppercase tracking-wider font-bold text-muted-foreground">Gameweek {selectedGW} Standings</CardTitle>
                     </CardHeader>
                     <CardContent className="p-0">
                       <Table>
                         <TableHeader>
-                          <TableRow className="bg-[#19297C] hover:bg-[#19297C]">
-                            <TableHead className="text-white">Rank</TableHead>
-                            <TableHead className="text-white">Team</TableHead>
-                            <TableHead className="text-white text-right">Points</TableHead>
-                            <TableHead className="text-white text-right">C+VC</TableHead>
+                          <TableRow className="bg-muted/30 hover:bg-muted/30 border-border/50">
+                            <TableHead className="w-12 text-center uppercase text-[10px] tracking-widest font-bold">Rank</TableHead>
+                            <TableHead className="uppercase text-[10px] tracking-widest font-bold">Manager</TableHead>
+                            <TableHead className="text-right uppercase text-[10px] tracking-widest font-bold">Points</TableHead>
+                            <TableHead className="text-right uppercase text-[10px] tracking-widest font-bold">C+VC</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -290,32 +276,17 @@ export default function GameweeksPage() {
                             .map((team, index) => {
                               const rank = index + 1
                               return (
-                                <TableRow 
-                                  key={team.teamId}
-                                  className={`border-[#DBC2CF] dark:border-[#19297C] ${
-                                    rank === 1 ? 'bg-[#F26430]/5' :
-                                    rank === 2 ? 'bg-[#028090]/5' :
-                                    rank === currentGameweek.teams.length ? 'bg-red-500/5' :
-                                    ''
-                                  }`}
-                                >
-                                  <TableCell>
-                                    <Badge className={
-                                      rank === 1 ? 'bg-[#F26430] text-white' :
-                                      rank === 2 ? 'bg-[#028090] text-white' :
-                                      rank === currentGameweek.teams.length ? 'bg-red-500 text-white' :
-                                      'bg-[#DBC2CF] dark:bg-[#19297C] text-[#1A1F16] dark:text-[#FFFCF2]'
-                                    }>
-                                      {rank}
-                                    </Badge>
+                                <TableRow key={team.teamId} className="border-border/50 hover:bg-muted/20">
+                                  <TableCell className="text-center">
+                                    <Badge variant={rank === 1 ? "default" : "outline"} className={cn("text-[10px] px-1.5 py-0 h-5", rank === 1 ? "bg-yellow-500 hover:bg-yellow-600 border-none text-black font-bold" : "text-muted-foreground border-border/30")}>{rank}</Badge>
                                   </TableCell>
-                                  <TableCell className="font-medium text-[#1A1F16] dark:text-[#FFFCF2]">
+                                  <TableCell className="font-bold text-foreground">
                                     {team.userName}
                                   </TableCell>
-                                  <TableCell className="text-right font-mono font-bold text-[#1A1F16] dark:text-[#FFFCF2]">
+                                  <TableCell className="text-right font-mono font-bold text-lg text-primary">
                                     {team.points}
                                   </TableCell>
-                                  <TableCell className="text-right font-mono text-[#19297C] dark:text-[#028090]">
+                                  <TableCell className="text-right font-mono text-muted-foreground">
                                     {team.captaincyPoints}
                                   </TableCell>
                                 </TableRow>
@@ -327,19 +298,12 @@ export default function GameweeksPage() {
                   </Card>
                 </BlurFade>
 
-                {/* Fixtures */}
                 {currentFixtures.length > 0 && (
                   <BlurFade delay={0.25}>
-                    <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
-                      <CardHeader className="border-b border-[#DBC2CF] dark:border-[#19297C]">
-                        <CardTitle className="text-[#1A1F16] dark:text-[#FFFCF2]">
-                          Premier League Fixtures - GW{selectedGW}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4">
-                        <FixturesDisplay fixtures={currentFixtures} gameweek={selectedGW || 1} />
-                      </CardContent>
-                    </Card>
+                    <div className="pt-4">
+                      <h3 className="text-lg font-sports font-bold text-muted-foreground mb-4 px-1">Fixtures</h3>
+                      <FixturesDisplay fixtures={currentFixtures} gameweek={selectedGW || 1} />
+                    </div>
                   </BlurFade>
                 )}
               </>

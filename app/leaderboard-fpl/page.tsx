@@ -5,10 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { BlurFade } from "@/components/ui/blur-fade"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { RefreshCw, Trophy, TrendingDown, AlertCircle, ArrowRightLeft, X, ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react"
+import { RefreshCw, Trophy, AlertCircle, ArrowRightLeft, ArrowUp, ArrowDown, ChevronsUpDown, Medal, Award } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { GlobalRefresh } from "@/components/global-refresh"
 
@@ -16,8 +16,8 @@ interface FPLLeaderboardEntry {
   teamId: string
   userName: string
   position: number
-  totalPointsFPL: number // FPL total (includes hits)
-  totalPointsNoHits: number // Without hits
+  totalPointsFPL: number
+  totalPointsNoHits: number
   totalHits: number
   totalHitCost: number
   gameweeks: Array<{
@@ -45,7 +45,7 @@ export default function FPLLeaderboardPage() {
       setError(null)
       const response = await fetch("/api/leaderboard-fpl")
       const data = await response.json()
-      
+
       if (data.success) {
         setLeaderboard(data.data)
       } else {
@@ -67,24 +67,13 @@ export default function FPLLeaderboardPage() {
 
   const sortedLeaderboard = [...leaderboard].sort((a, b) => {
     let comparison = 0
-    
     switch (sortBy) {
-      case "noHits":
-        comparison = b.totalPointsNoHits - a.totalPointsNoHits
-        break
-      case "fpl":
-        comparison = b.totalPointsFPL - a.totalPointsFPL
-        break
-      case "hits":
-        comparison = b.totalHits - a.totalHits
-        break
-      case "hitCost":
-        comparison = b.totalHitCost - a.totalHitCost
-        break
-      default:
-        comparison = b.totalPointsFPL - a.totalPointsFPL
+      case "noHits": comparison = b.totalPointsNoHits - a.totalPointsNoHits; break
+      case "fpl": comparison = b.totalPointsFPL - a.totalPointsFPL; break
+      case "hits": comparison = b.totalHits - a.totalHits; break
+      case "hitCost": comparison = b.totalHitCost - a.totalHitCost; break
+      default: comparison = b.totalPointsFPL - a.totalPointsFPL
     }
-    
     return sortOrder === "desc" ? comparison : -comparison
   })
 
@@ -98,37 +87,15 @@ export default function FPLLeaderboardPage() {
   }
 
   const getSortIcon = (column: "noHits" | "fpl" | "hits" | "hitCost") => {
-    if (sortBy !== column) {
-      return <ChevronsUpDown className="h-3 w-3 opacity-50" />
-    }
-    return sortOrder === "desc" ? (
-      <ArrowDown className="h-3 w-3" />
-    ) : (
-      <ArrowUp className="h-3 w-3" />
-    )
+    if (sortBy !== column) return <ChevronsUpDown className="h-3 w-3 opacity-50" />
+    return sortOrder === "desc" ? <ArrowDown className="h-3 w-3" /> : <ArrowUp className="h-3 w-3" />
   }
 
   const getPositionBadge = (position: number) => {
-    if (position === 1) return (
-      <Badge className="bg-[#F26430]/20 border border-[#F26430]/50 text-[#F26430] text-xs px-2 py-0.5 font-semibold">
-        <Trophy className="w-3 h-3 mr-1" />1st
-      </Badge>
-    )
-    if (position === 2) return (
-      <Badge className="bg-[#028090]/20 border border-[#028090]/50 text-[#028090] text-xs px-2 py-0.5 font-semibold">
-        2nd
-      </Badge>
-    )
-    if (position === 3) return (
-      <Badge className="bg-[#19297C]/20 border border-[#19297C]/50 text-[#19297C] dark:text-[#DBC2CF] text-xs px-2 py-0.5 font-semibold">
-        3rd
-      </Badge>
-    )
-    return (
-      <Badge variant="outline" className="border-[#DBC2CF] dark:border-[#19297C] text-[#19297C] dark:text-[#DBC2CF] text-xs px-2 py-0.5">
-        {position}th
-      </Badge>
-    )
+    if (position === 1) return <Badge className="bg-yellow-500/10 border-yellow-500 text-yellow-500 hover:bg-yellow-500/20"><Trophy className="w-3 h-3 mr-1" />1st</Badge>
+    if (position === 2) return <Badge className="bg-slate-400/10 border-slate-400 text-slate-400 hover:bg-slate-400/20"><Medal className="w-3 h-3 mr-1" />2nd</Badge>
+    if (position === 3) return <Badge className="bg-orange-700/10 border-orange-700 text-orange-700 hover:bg-orange-700/20"><Award className="w-3 h-3 mr-1" />3rd</Badge>
+    return <Badge variant="outline" className="text-muted-foreground">{position}th</Badge>
   }
 
   const handleTeamClick = (entry: FPLLeaderboardEntry) => {
@@ -137,25 +104,18 @@ export default function FPLLeaderboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFCF2] dark:bg-[#1A1F16]">
-      <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-background pb-20 md:pb-6">
+      <div className="container mx-auto px-4 py-8">
         <BlurFade delay={0}>
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-[#1A1F16] dark:text-[#FFFCF2]">FPL Leaderboard (Direct from API)</h1>
-              <p className="text-sm text-[#19297C] dark:text-[#DBC2CF]">
-                Compare points with and without transfer hits
-              </p>
+              <h1 className="text-3xl font-sports font-bold uppercase italic tracking-wide">FPL Leaderboard</h1>
+              <p className="text-sm text-muted-foreground mt-1">Direct API Feed • Includes Hits Analysis</p>
             </div>
             <div className="flex gap-2">
-              <Button 
-                onClick={fetchLeaderboard} 
-                disabled={loading} 
-                variant="outline"
-                className="bg-[#19297C] border-[#028090] hover:bg-[#028090] hover:border-[#F26430] text-white"
-              >
-                <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                Refresh
+              <Button onClick={fetchLeaderboard} disabled={loading} variant="outline" size="sm" className="gap-2">
+                <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+                Sync
               </Button>
               <GlobalRefresh />
             </div>
@@ -163,274 +123,151 @@ export default function FPLLeaderboardPage() {
         </BlurFade>
 
         {loading ? (
-          <LoadingSpinner text="Loading FPL leaderboard" />
+          <LoadingSpinner text="Checking live scores..." />
         ) : error ? (
-          <Card className="p-8 text-center bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
-            <div className="text-[#F26430] mb-3 flex flex-col items-center">
+          <Card className="p-8 text-center border-destructive/50 bg-destructive/5">
+            <div className="text-destructive mb-3 flex flex-col items-center">
               <AlertCircle className="h-8 w-8 mb-2" />
               <p>{error}</p>
             </div>
-            <Button 
-              onClick={fetchLeaderboard}
-              className="bg-[#F26430] text-white hover:bg-[#F26430]/90"
-            >
-              Try Again
-            </Button>
+            <Button onClick={fetchLeaderboard} variant="destructive">Retry</Button>
           </Card>
         ) : (
           <BlurFade delay={0.1}>
-            <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C] overflow-hidden">
-              <CardHeader className="py-4 px-6 border-b border-[#DBC2CF] dark:border-[#19297C]">
+            <Card className="overflow-hidden">
+              <CardHeader className="py-4 px-6 border-b border-border/50 flex md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center space-x-3">
-                  <div className="h-8 w-8 rounded-lg bg-[#F26430]/10 flex items-center justify-center">
-                    <Trophy className="h-4 w-4 text-[#F26430]" />
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Trophy className="h-5 w-5 text-primary" />
                   </div>
-                  <div className="flex-1">
-                    <CardTitle className="text-base text-[#1A1F16] dark:text-[#FFFCF2]">FPL Leaderboard</CardTitle>
-                    <CardDescription className="text-xs text-[#19297C] dark:text-[#DBC2CF]">
-                      Click column headers to sort • Click team name for transfer history
-                    </CardDescription>
+                  <div>
+                    <CardTitle className="text-lg">League Standings</CardTitle>
+                    <CardDescription>Live tracking direct from FPL API</CardDescription>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setShowNoHits(!showNoHits)}
-                    className={cn(
-                      "text-xs border-[#DBC2CF] dark:border-[#19297C]",
-                      showNoHits && "bg-[#F26430] text-white border-[#F26430] hover:bg-[#F26430]/90"
-                    )}
-                  >
-                    {showNoHits ? "Hide" : "Show"} Points (No Hits)
-                  </Button>
                 </div>
+                <Button
+                  size="sm"
+                  variant={showNoHits ? "default" : "outline"}
+                  onClick={() => setShowNoHits(!showNoHits)}
+                  className="text-xs"
+                >
+                  {showNoHits ? "Hide" : "Show"} "No Hits" Calc
+                </Button>
               </CardHeader>
               <CardContent className="p-0">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-[#DBC2CF]/30 dark:bg-[#19297C]/30 border-b border-[#DBC2CF] dark:border-[#19297C] hover:bg-[#DBC2CF]/30 dark:hover:bg-[#19297C]/30">
-                      <TableHead className="py-3 px-4 font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider">Pos</TableHead>
-                      <TableHead className="py-3 px-4 font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider">Team</TableHead>
+                    <TableRow className="hover:bg-transparent border-border/50 bg-muted/30">
+                      <TableHead className="w-16 font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Pos</TableHead>
+                      <TableHead className="font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Manager</TableHead>
                       {showNoHits && (
-                        <TableHead 
-                          className="py-3 px-4 text-right font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider cursor-pointer hover:text-[#F26430] transition-colors"
-                          onClick={() => handleSort("noHits")}
-                        >
-                          <div className="flex items-center justify-end gap-1">
-                            Points (No Hits)
-                            {getSortIcon("noHits")}
+                        <TableHead className="text-right cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort("noHits")}>
+                          <div className="flex items-center justify-end gap-1 font-bold uppercase text-[10px] tracking-widest">
+                            No Hits {getSortIcon("noHits")}
                           </div>
                         </TableHead>
                       )}
-                      <TableHead 
-                        className="py-3 px-4 text-right font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider cursor-pointer hover:text-[#F26430] transition-colors"
-                        onClick={() => handleSort("fpl")}
-                      >
-                        <div className="flex items-center justify-end gap-1">
-                          FPL Total
-                          {getSortIcon("fpl")}
+                      <TableHead className="text-right cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort("fpl")}>
+                        <div className="flex items-center justify-end gap-1 font-bold uppercase text-[10px] tracking-widest">
+                          Total {getSortIcon("fpl")}
                         </div>
                       </TableHead>
-                      <TableHead 
-                        className="py-3 px-4 text-center font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider cursor-pointer hover:text-[#F26430] transition-colors"
-                        onClick={() => handleSort("hits")}
-                      >
-                        <div className="flex items-center justify-center gap-1">
-                          Hits
-                          {getSortIcon("hits")}
+                      <TableHead className="text-center cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort("hits")}>
+                        <div className="flex items-center justify-center gap-1 font-bold uppercase text-[10px] tracking-widest">
+                          Hits {getSortIcon("hits")}
                         </div>
                       </TableHead>
-                      <TableHead 
-                        className="py-3 px-4 text-right font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider cursor-pointer hover:text-[#F26430] transition-colors"
-                        onClick={() => handleSort("hitCost")}
-                      >
-                        <div className="flex items-center justify-end gap-1">
-                          Hit Cost
-                          {getSortIcon("hitCost")}
+                      <TableHead className="text-right cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort("hitCost")}>
+                        <div className="flex items-center justify-end gap-1 font-bold uppercase text-[10px] tracking-widest">
+                          Cost {getSortIcon("hitCost")}
                         </div>
                       </TableHead>
-                      <TableHead className="py-3 px-4 text-right font-semibold text-[#19297C] dark:text-[#DBC2CF] text-xs uppercase tracking-wider">Difference</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sortedLeaderboard.map((entry, index) => {
-                      const actualPosition = index + 1
-                      const difference = entry.totalPointsFPL - entry.totalPointsNoHits
-                      
-                      return (
-                        <TableRow 
-                          key={entry.teamId}
-                          className={cn(
-                            "border-b border-[#DBC2CF] dark:border-[#19297C] transition-colors",
-                            actualPosition === 1 && "bg-[#F26430]/5 hover:bg-[#F26430]/10",
-                            actualPosition === 2 && "bg-[#028090]/5 hover:bg-[#028090]/10",
-                            actualPosition === 3 && "bg-[#19297C]/5 dark:bg-[#19297C]/10 hover:bg-[#19297C]/10",
-                            actualPosition > 3 && "hover:bg-[#DBC2CF]/30 dark:hover:bg-[#19297C]/30"
-                          )}
-                        >
-                          <TableCell className="py-3 px-4">
-                            {getPositionBadge(actualPosition)}
+                    {sortedLeaderboard.map((entry, index) => (
+                      <TableRow key={entry.teamId} className="border-border/50 transition-colors hover:bg-muted/30">
+                        <TableCell className="font-mono">{getPositionBadge(index + 1)}</TableCell>
+                        <TableCell>
+                          <button onClick={() => handleTeamClick(entry)} className="font-bold hover:text-primary transition-colors flex items-center gap-2 group text-left">
+                            {entry.userName}
+                            <ArrowRightLeft className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
+                          </button>
+                        </TableCell>
+                        {showNoHits && (
+                          <TableCell className="text-right font-mono font-medium text-muted-foreground">
+                            {entry.totalPointsNoHits}
                           </TableCell>
-                          <TableCell className="py-3 px-4">
-                            <button
-                              onClick={() => handleTeamClick(entry)}
-                              className="font-semibold text-[#19297C] dark:text-[#028090] hover:text-[#F26430] dark:hover:text-[#F26430] transition-colors cursor-pointer flex items-center gap-2"
-                            >
-                              {entry.userName}
-                              <ArrowRightLeft className="h-3 w-3" />
-                            </button>
-                          </TableCell>
-                          {showNoHits && (
-                            <TableCell className="py-3 px-4 text-right">
-                              <span className="font-bold font-mono text-lg text-[#1A1F16] dark:text-[#FFFCF2]">
-                                {entry.totalPointsNoHits}
-                              </span>
-                            </TableCell>
-                          )}
-                          <TableCell className="py-3 px-4 text-right">
-                            <span className="font-bold font-mono text-lg text-[#028090]">
-                              {entry.totalPointsFPL}
-                            </span>
-                          </TableCell>
-                          <TableCell className="py-3 px-4 text-center">
-                            {entry.totalHits > 0 ? (
-                              <Badge className="bg-[#F26430] text-white">
-                                {entry.totalHits}
-                              </Badge>
-                            ) : (
-                              <span className="text-[#19297C] dark:text-[#DBC2CF]">0</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="py-3 px-4 text-right">
-                            {entry.totalHitCost > 0 ? (
-                              <span className="text-[#F26430] font-bold font-mono">
-                                -{entry.totalHitCost}
-                              </span>
-                            ) : (
-                              <span className="text-[#19297C] dark:text-[#DBC2CF]">0</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="py-3 px-4 text-right">
-                            <span className={cn(
-                              "font-bold font-mono",
-                              difference < 0 ? "text-[#F26430]" : difference > 0 ? "text-[#028090]" : "text-[#19297C] dark:text-[#DBC2CF]"
-                            )}>
-                              {difference < 0 ? difference : difference > 0 ? `+${difference}` : "0"}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
+                        )}
+                        <TableCell className="text-right font-mono font-bold text-lg text-primary">
+                          {entry.totalPointsFPL}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {entry.totalHits > 0 ? <Badge variant="destructive">{entry.totalHits}</Badge> : <span className="text-muted-foreground">-</span>}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-destructive">
+                          {entry.totalHitCost > 0 ? `-${entry.totalHitCost}` : "-"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </CardContent>
             </Card>
 
-            {/* Transfer History Dialog */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogContent className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C] max-w-4xl max-h-[80vh] overflow-y-auto">
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle className="text-[#1A1F16] dark:text-[#FFFCF2]">
-                    Transfer History - {selectedTeam?.userName}
-                  </DialogTitle>
-                  <DialogDescription className="text-[#19297C] dark:text-[#DBC2CF]">
-                    Gameweek-by-gameweek transfer activity and hits
-                  </DialogDescription>
+                  <DialogTitle>Transfer Analysis: {selectedTeam?.userName}</DialogTitle>
+                  <DialogDescription>Breakdown of transfer hits per gameweek</DialogDescription>
                 </DialogHeader>
                 {selectedTeam && (
-                  <div className="space-y-4">
-                    {/* Summary */}
-                    <div className="grid grid-cols-4 gap-4 p-4 bg-[#DBC2CF]/10 dark:bg-[#19297C]/10 rounded-lg">
-                      <div className="text-center">
-                        <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] mb-1">Total Hits</p>
-                        <p className="text-2xl font-bold text-[#F26430]">{selectedTeam.totalHits}</p>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="bg-muted/30 p-4 rounded-lg text-center">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Total Hits</div>
+                        <div className="text-2xl font-sports font-bold text-destructive">{selectedTeam.totalHits}</div>
                       </div>
-                      <div className="text-center">
-                        <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] mb-1">Hit Cost</p>
-                        <p className="text-2xl font-bold text-[#F26430]">-{selectedTeam.totalHitCost}</p>
+                      <div className="bg-muted/30 p-4 rounded-lg text-center">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Points Lost</div>
+                        <div className="text-2xl font-sports font-bold text-destructive">-{selectedTeam.totalHitCost}</div>
                       </div>
-                      <div className="text-center">
-                        <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] mb-1">Points (No Hits)</p>
-                        <p className="text-2xl font-bold text-[#1A1F16] dark:text-[#FFFCF2]">{selectedTeam.totalPointsNoHits}</p>
+                      <div className="bg-muted/30 p-4 rounded-lg text-center">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Net Points</div>
+                        <div className="text-2xl font-sports font-bold">{selectedTeam.totalPointsNoHits}</div>
                       </div>
-                      <div className="text-center">
-                        <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] mb-1">FPL Total</p>
-                        <p className="text-2xl font-bold text-[#028090]">{selectedTeam.totalPointsFPL}</p>
+                      <div className="bg-primary/10 p-4 rounded-lg text-center border border-primary/20">
+                        <div className="text-xs text-primary uppercase tracking-wider font-bold">Official Total</div>
+                        <div className="text-2xl font-sports font-bold text-primary">{selectedTeam.totalPointsFPL}</div>
                       </div>
                     </div>
 
-                    {/* Gameweek Table */}
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-[#DBC2CF]/30 dark:bg-[#19297C]/30">
-                          <TableHead className="text-[#19297C] dark:text-[#DBC2CF]">GW</TableHead>
-                          <TableHead className="text-[#19297C] dark:text-[#DBC2CF]">Transfers</TableHead>
-                          <TableHead className="text-[#19297C] dark:text-[#DBC2CF]">Hits</TableHead>
-                          <TableHead className="text-[#19297C] dark:text-[#DBC2CF]">Hit Cost</TableHead>
-                          <TableHead className="text-right text-[#19297C] dark:text-[#DBC2CF]">Points</TableHead>
-                          <TableHead className="text-right text-[#19297C] dark:text-[#DBC2CF]">With Hits</TableHead>
+                        <TableRow className="bg-muted/30 hover:bg-muted/30">
+                          <TableHead>Gameweek</TableHead>
+                          <TableHead className="text-center">Tx Made</TableHead>
+                          <TableHead className="text-center">Hits</TableHead>
+                          <TableHead className="text-center">Cost</TableHead>
+                          <TableHead className="text-right">GW Points</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {selectedTeam.gameweeks
-                          .sort((a, b) => b.gameweek - a.gameweek)
-                          .map((gw) => {
-                            const hits = gw.transfersCost < 0 ? Math.abs(gw.transfersCost) / 4 : 0
-                            return (
-                              <TableRow key={gw.gameweek} className="border-[#DBC2CF] dark:border-[#19297C]">
-                                <TableCell className="font-medium text-[#1A1F16] dark:text-[#FFFCF2]">GW{gw.gameweek}</TableCell>
-                                <TableCell>
-                                  <Badge variant="outline" className="border-[#DBC2CF] dark:border-[#19297C] text-[#19297C] dark:text-[#DBC2CF]">
-                                    {gw.transfers}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell>
-                                  {hits > 0 ? (
-                                    <Badge className="bg-[#F26430] text-white">
-                                      {hits}
-                                    </Badge>
-                                  ) : (
-                                    <span className="text-[#19297C] dark:text-[#DBC2CF]">0</span>
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  {gw.transfersCost < 0 ? (
-                                    <span className="text-[#F26430] font-bold font-mono">
-                                      {gw.transfersCost}
-                                    </span>
-                                  ) : (
-                                    <span className="text-[#19297C] dark:text-[#DBC2CF]">0</span>
-                                  )}
-                                </TableCell>
-                                <TableCell className="text-right font-mono text-[#1A1F16] dark:text-[#FFFCF2]">{gw.points}</TableCell>
-                                <TableCell className="text-right font-mono text-[#028090]">{gw.pointsWithHits}</TableCell>
-                              </TableRow>
-                            )
-                          })}
+                        {selectedTeam.gameweeks.sort((a, b) => b.gameweek - a.gameweek).map((gw) => (
+                          <TableRow key={gw.gameweek}>
+                            <TableCell className="font-bold">GW {gw.gameweek}</TableCell>
+                            <TableCell className="text-center text-muted-foreground">{gw.transfers}</TableCell>
+                            <TableCell className="text-center">{gw.transfersCost < 0 ? <Badge variant="destructive">{Math.abs(gw.transfersCost) / 4}</Badge> : "-"}</TableCell>
+                            <TableCell className="text-center font-mono text-destructive">{gw.transfersCost < 0 ? gw.transfersCost : "-"}</TableCell>
+                            <TableCell className="text-right font-mono font-bold">{gw.points}</TableCell>
+                          </TableRow>
+                        ))}
                       </TableBody>
                     </Table>
                   </div>
                 )}
               </DialogContent>
             </Dialog>
-
-            {/* Info Card */}
-            <Card className="mt-4 bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-[#F26430] mt-0.5" />
-                  <div className="text-sm text-[#19297C] dark:text-[#DBC2CF]">
-                    <p className="font-semibold mb-1 text-[#1A1F16] dark:text-[#FFFCF2]">Note:</p>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li><strong className="text-[#1A1F16] dark:text-[#FFFCF2]">Points (No Hits):</strong> Sum of all gameweek points without transfer deductions</li>
-                      <li><strong className="text-[#1A1F16] dark:text-[#FFFCF2]">FPL Total:</strong> Official FPL total points (includes transfer hits)</li>
-                      <li><strong className="text-[#1A1F16] dark:text-[#FFFCF2]">Difference:</strong> Shows how hits affect total points (negative = points lost)</li>
-                      <li>FPL does NOT include -4 hits in individual gameweek points, but includes them in the final total</li>
-                      <li>Click on a team name to view detailed transfer history by gameweek</li>
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </BlurFade>
         )}
       </div>

@@ -1,140 +1,159 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Trophy, Users, DollarSign, Home, Calendar, Lightbulb, Sun, Moon, Menu, X, ArrowRightLeft, BarChart3, BookOpen } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { useTheme } from "next-themes"
-import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
+import {
+  LayoutDashboard,
+  Users,
+  Calendar,
+  ArrowRightLeft,
+  PieChart,
+  Lightbulb,
+  Menu,
+  X,
+  Trophy,
+  Activity,
+  LogOut
+} from "lucide-react"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { Logo } from "@/components/logo"
+import { useTeam } from "@/components/providers/team-provider"
+import { useRouter } from "next/navigation"
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: Home },
-  { href: "/leaderboard-fpl", label: "FPL Leaderboard", icon: BarChart3 },
-  { href: "/gameweeks", label: "Gameweeks", icon: Calendar },
-  { href: "/transfers", label: "Transfers", icon: ArrowRightLeft },
-  { href: "/financials", label: "Financials", icon: DollarSign },
-  { href: "/insights", label: "Insights", icon: Lightbulb },
-  { href: "/rules", label: "Rules", icon: BookOpen },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Leaderboard", href: "/leaderboard-fpl", icon: Trophy },
+  { name: "Teams", href: "/teams", icon: Users },
+  { name: "Gameweeks", href: "/gameweeks", icon: Calendar },
+  { name: "Transfers", href: "/transfers", icon: ArrowRightLeft },
+  { name: "Financials", href: "/financials", icon: PieChart },
+  { name: "Insights", href: "/insights", icon: Lightbulb },
 ]
 
 export function Navigation() {
   const pathname = usePathname()
-  const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const router = useRouter()
+  const { teamName, setSelectedTeamId } = useTeam()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  // Don't show nav on landing page
+  if (pathname === "/") return null
+
+  const handleLogout = () => {
+    setSelectedTeamId(null)
+    router.push("/")
+  }
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white dark:bg-[#1A1F16] border-b border-[#DBC2CF] dark:border-[#19297C]">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-14">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 group">
-            <Trophy className="h-6 w-6 text-[#F26430]" />
-            <span className="font-bold text-lg text-[#1A1F16] dark:text-[#FFFCF2]">
-              FPL League
-            </span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
-              return (
-                <Link key={item.href} href={item.href}>
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "relative flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200",
-                      isActive
-                        ? "bg-[#DBC2CF] dark:bg-[#19297C] text-[#F26430] dark:text-[#028090]"
-                        : "text-[#19297C] dark:text-[#DBC2CF] hover:text-[#F26430] dark:hover:text-[#028090] hover:bg-[#DBC2CF]/50 dark:hover:bg-[#19297C]/50"
-                    )}
-                  >
-                    <Icon className={cn(
-                      "h-4 w-4",
-                      isActive ? "text-[#F26430] dark:text-[#028090]" : ""
-                    )} />
-                    <span className="text-sm font-medium">{item.label}</span>
-                    {isActive && (
-                      <span className="absolute -bottom-px left-2 right-2 h-0.5 bg-[#F26430] dark:bg-[#028090]" />
-                    )}
-                  </Button>
-                </Link>
-              )
-            })}
-          </div>
-
-          {/* Theme Toggle & Mobile Menu */}
-          <div className="flex items-center gap-2">
-            {mounted && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="h-9 w-9 rounded-md text-[#19297C] dark:text-[#DBC2CF] hover:text-[#F26430] dark:hover:text-[#028090] hover:bg-[#DBC2CF]/50 dark:hover:bg-[#19297C]/50"
-              >
-                {theme === "dark" ? (
-                  <Sun className="h-4 w-4" />
-                ) : (
-                  <Moon className="h-4 w-4" />
-                )}
-                <span className="sr-only">Toggle theme</span>
-              </Button>
-            )}
-
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden h-9 w-9 rounded-md text-[#19297C] dark:text-[#DBC2CF] hover:text-[#F26430] dark:hover:text-[#028090] hover:bg-[#DBC2CF]/50 dark:hover:bg-[#19297C]/50"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-          </div>
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full lg:translate-x-0 border-r border-sidebar-border bg-sidebar hidden lg:flex flex-col">
+        <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
+          <Logo />
         </div>
 
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="md:hidden absolute left-0 right-0 top-full bg-white dark:bg-[#1A1F16] border-b border-[#DBC2CF] dark:border-[#19297C] shadow-lg">
-            <div className="container mx-auto px-4 py-3 space-y-1">
-              {navItems.map((item) => {
-                const Icon = item.icon
-                const isActive = pathname === item.href
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <div
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-3 rounded-md transition-all",
-                        isActive
-                          ? "bg-[#DBC2CF] dark:bg-[#19297C] text-[#F26430] dark:text-[#028090]"
-                          : "text-[#19297C] dark:text-[#DBC2CF] hover:text-[#F26430] dark:hover:text-[#028090] hover:bg-[#DBC2CF]/50 dark:hover:bg-[#19297C]/50"
-                      )}
-                    >
-                      <Icon className={cn(
-                        "h-5 w-5",
-                        isActive ? "text-[#F26430] dark:text-[#028090]" : ""
-                      )} />
-                      <span className="font-medium">{item.label}</span>
-                    </div>
-                  </Link>
-                )
-              })}
+        {teamName && (
+          <div className="px-6 py-4 border-b border-sidebar-border bg-sidebar-accent/50">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                {teamName.charAt(0)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">Manager</p>
+                <p className="font-bold text-sm truncate text-sidebar-foreground">{teamName}</p>
+              </div>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleLogout} title="Logout">
+                <LogOut className="h-3 w-3" />
+              </Button>
             </div>
           </div>
         )}
+
+        <div className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                  isActive
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                )}
+              >
+                <item.icon className="w-4 h-4" />
+                {item.name}
+              </Link>
+            )
+          })}
+        </div>
+
+        <div className="p-4 border-t border-sidebar-border">
+          <div className="flex items-center justify-between px-2">
+            <span className="text-xs text-muted-foreground font-mono">v2.0.0</span>
+            <ThemeToggle />
+          </div>
+        </div>
+      </aside>
+
+      {/* Mobile Header / Bottom Nav */}
+      <div className="lg:hidden">
+        {/* Top Header */}
+        <header className="fixed top-0 left-0 right-0 z-40 h-16 border-b border-border bg-background/80 backdrop-blur-md flex items-center justify-between px-4">
+          <Logo />
+          <div className="flex items-center gap-2">
+            {teamName && (
+              <div className="flex items-center gap-2 mr-2 px-2 py-1 bg-muted/50 rounded-full">
+                <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] text-primary font-bold">
+                  {teamName.charAt(0)}
+                </div>
+                <span className="text-xs font-bold truncate max-w-[80px]">{teamName}</span>
+              </div>
+            )}
+            <ThemeToggle />
+            <Button variant="ghost" size="icon" onClick={handleLogout}>
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </div>
+        </header>
+
+        {/* Bottom Nav */}
+        <nav className="fixed bottom-0 left-0 right-0 z-40 h-16 border-t border-border bg-background flex items-center justify-around px-2 pb-safe">
+          {navItems.slice(0, 5).map((item) => {
+            const isActive = pathname === item.href
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex flex-col items-center justify-center w-full h-full gap-1",
+                  isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <item.icon className={cn("w-5 h-5 transition-all", isActive && "scale-110")} />
+                <span className="text-[10px] font-medium">{item.name === "Dashboard" ? "Home" : item.name}</span>
+              </Link>
+            )
+          })}
+
+          {/* More Menu Trigger (If needed for remaining items) */}
+          <Link
+            href="/insights"
+            className={cn(
+              "flex flex-col items-center justify-center w-full h-full gap-1",
+              pathname === "/insights" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Lightbulb className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Insights</span>
+          </Link>
+        </nav>
       </div>
-    </nav>
+    </>
   )
 }

@@ -12,6 +12,7 @@ import { BlurFade } from "@/components/ui/blur-fade"
 import { NumberTicker } from "@/components/ui/number-ticker"
 import { GlobalRefresh } from "@/components/global-refresh"
 import type { TeamTransferHistory } from "@/lib/transfer-calculator"
+import { cn } from "@/lib/utils"
 
 export default function TransfersPage() {
   const [transferData, setTransferData] = useState<TeamTransferHistory[]>([])
@@ -23,7 +24,7 @@ export default function TransfersPage() {
       setLoading(true)
       const response = await fetch("/api/transfers")
       const data = await response.json()
-      
+
       if (data.success && data.data) {
         setTransferData(data.data)
         if (!selectedTeam && data.data.length > 0) {
@@ -43,26 +44,21 @@ export default function TransfersPage() {
 
   const totalHits = transferData.reduce((sum, team) => sum + team.totalHits, 0)
   const totalHitCost = transferData.reduce((sum, team) => sum + team.totalHitCost, 0)
-  const selectedTeamData = transferData.find(t => t.teamId === selectedTeam)
+  // const selectedTeamData = transferData.find(t => t.teamId === selectedTeam) // Unused?
 
   return (
-    <div className="min-h-screen bg-[#FFFCF2] dark:bg-[#1A1F16]">
-      <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-background pb-20 md:pb-6">
+      <div className="container mx-auto px-4 py-8">
         <BlurFade delay={0}>
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-[#1A1F16] dark:text-[#FFFCF2]">Transfer Tracker</h1>
-              <p className="text-sm text-[#19297C] dark:text-[#DBC2CF]">Track free transfers, hits, and costs</p>
+              <h1 className="text-3xl font-sports font-bold uppercase italic tracking-wide">Transfer Tracker</h1>
+              <p className="text-sm text-muted-foreground mt-1">Monitor market moves and points hits</p>
             </div>
             <div className="flex gap-2">
-              <Button 
-                onClick={fetchTransfers} 
-                disabled={loading} 
-                variant="outline"
-                className="bg-[#19297C] border-[#028090] hover:bg-[#028090] hover:border-[#F26430] text-white"
-              >
-                <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                Refresh
+              <Button onClick={fetchTransfers} disabled={loading} variant="outline" size="sm" className="gap-2">
+                <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+                Sync
               </Button>
               <GlobalRefresh />
             </div>
@@ -70,55 +66,54 @@ export default function TransfersPage() {
         </BlurFade>
 
         {loading ? (
-          <LoadingSpinner text="Loading transfer data" />
+          <LoadingSpinner text="Analyzing transfer data..." />
         ) : (
-          <div className="space-y-4">
-            {/* Summary Cards */}
+          <div className="space-y-6">
             <BlurFade delay={0.05}>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
+                <Card className="border-border/50">
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] uppercase tracking-wider font-medium mb-1">Total Hits</p>
-                        <p className="text-3xl font-bold font-mono text-[#F26430]">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Total Hits Taken</p>
+                        <p className="text-3xl font-bold font-mono text-destructive">
                           <NumberTicker value={totalHits} />
                         </p>
                       </div>
-                      <div className="h-12 w-12 rounded-lg bg-[#F26430]/10 flex items-center justify-center">
-                        <AlertTriangle className="h-6 w-6 text-[#F26430]" />
+                      <div className="h-12 w-12 rounded-lg bg-destructive/10 flex items-center justify-center">
+                        <AlertTriangle className="h-6 w-6 text-destructive" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
+                <Card className="border-border/50">
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] uppercase tracking-wider font-medium mb-1">Hit Cost</p>
-                        <p className="text-3xl font-bold font-mono text-[#F26430]">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Total Cost</p>
+                        <p className="text-3xl font-bold font-mono text-destructive">
                           -<NumberTicker value={totalHitCost} />
                         </p>
                       </div>
-                      <div className="h-12 w-12 rounded-lg bg-[#F26430]/10 flex items-center justify-center">
-                        <TrendingDown className="h-6 w-6 text-[#F26430]" />
+                      <div className="h-12 w-12 rounded-lg bg-destructive/10 flex items-center justify-center">
+                        <TrendingDown className="h-6 w-6 text-destructive" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
+                <Card className="border-border/50">
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] uppercase tracking-wider font-medium mb-1">Teams</p>
-                        <p className="text-3xl font-bold font-mono text-[#19297C] dark:text-[#028090]">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Active Managers</p>
+                        <p className="text-3xl font-bold font-mono text-primary">
                           <NumberTicker value={transferData.length} />
                         </p>
                       </div>
-                      <div className="h-12 w-12 rounded-lg bg-[#19297C]/10 dark:bg-[#028090]/10 flex items-center justify-center">
-                        <ArrowRightLeft className="h-6 w-6 text-[#19297C] dark:text-[#028090]" />
+                      <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <ArrowRightLeft className="h-6 w-6 text-primary" />
                       </div>
                     </div>
                   </CardContent>
@@ -126,20 +121,19 @@ export default function TransfersPage() {
               </div>
             </BlurFade>
 
-            {/* Team Details */}
             <BlurFade delay={0.1}>
-              <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
-                <CardHeader className="border-b border-[#DBC2CF] dark:border-[#19297C]">
-                  <CardTitle className="text-[#1A1F16] dark:text-[#FFFCF2]">Transfer Details</CardTitle>
+              <Card className="border-border/50">
+                <CardHeader className="border-b border-border/50 py-4">
+                  <CardTitle className="text-base uppercase tracking-wider font-bold">Transfer Details</CardTitle>
                 </CardHeader>
                 <CardContent className="p-4">
                   <Tabs value={selectedTeam || undefined} onValueChange={setSelectedTeam}>
-                    <TabsList className="grid w-full grid-cols-6 bg-[#DBC2CF]/30 dark:bg-[#19297C]/30 mb-4">
+                    <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-4 h-auto p-1 bg-muted/50 gap-1">
                       {transferData.map((team) => (
-                        <TabsTrigger 
-                          key={team.teamId} 
+                        <TabsTrigger
+                          key={team.teamId}
                           value={team.teamId}
-                          className="data-[state=active]:bg-[#F26430] data-[state=active]:text-white"
+                          className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2"
                         >
                           {team.userName}
                         </TabsTrigger>
@@ -148,79 +142,73 @@ export default function TransfersPage() {
 
                     {transferData.map((team) => (
                       <TabsContent key={team.teamId} value={team.teamId} className="space-y-4">
-                        {/* Team Summary */}
-                        <div className="grid grid-cols-4 gap-4 p-4 bg-[#DBC2CF]/10 dark:bg-[#19297C]/10 rounded-lg">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/30 rounded-lg border border-border/50">
                           <div className="text-center">
-                            <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] mb-1">Total Hits</p>
-                            <p className="text-2xl font-bold text-[#F26430]">{team.totalHits}</p>
+                            <p className="text-xs text-muted-foreground font-bold uppercase mb-1">Hits</p>
+                            <p className="text-2xl font-bold text-destructive">{team.totalHits}</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] mb-1">Hit Cost</p>
-                            <p className="text-2xl font-bold text-[#F26430]">-{team.totalHitCost}</p>
+                            <p className="text-xs text-muted-foreground font-bold uppercase mb-1">Cost</p>
+                            <p className="text-2xl font-bold text-destructive">-{team.totalHitCost}</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] mb-1">FPL Total</p>
-                            <p className="text-2xl font-bold text-[#028090]">{team.totalGwPointsWithHits}</p>
+                            <p className="text-xs text-muted-foreground font-bold uppercase mb-1">FPL Total</p>
+                            <p className="text-2xl font-bold text-primary">{team.totalGwPointsWithHits}</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-xs text-[#19297C] dark:text-[#DBC2CF] mb-1">Points (No Hits)</p>
-                            <p className="text-2xl font-bold text-[#1A1F16] dark:text-[#FFFCF2]">{team.totalGwPoints}</p>
+                            <p className="text-xs text-muted-foreground font-bold uppercase mb-1">Points (Clean)</p>
+                            <p className="text-2xl font-bold text-foreground">{team.totalGwPoints}</p>
                           </div>
                         </div>
 
-                        {/* Gameweek Table */}
-                        <div className="rounded-md border border-[#DBC2CF] dark:border-[#19297C] overflow-hidden">
+                        <div className="rounded-md border border-border/50 overflow-hidden">
                           <Table>
                             <TableHeader>
-                              <TableRow className="bg-[#19297C] dark:bg-[#19297C] hover:bg-[#19297C]">
-                                <TableHead className="text-white">GW</TableHead>
-                                <TableHead className="text-white">Transfers</TableHead>
-                                <TableHead className="text-white">Free</TableHead>
-                                <TableHead className="text-white">Hits</TableHead>
-                                <TableHead className="text-white">Hit Cost</TableHead>
-                                <TableHead className="text-white">FPL Points</TableHead>
-                                <TableHead className="text-white">Points (No Hits)</TableHead>
+                              <TableRow className="bg-muted/50 hover:bg-muted/50 border-border/50">
+                                <TableHead className="font-bold text-xs uppercase tracking-wider">GW</TableHead>
+                                <TableHead className="font-bold text-xs uppercase tracking-wider text-center">Transfers</TableHead>
+                                <TableHead className="font-bold text-xs uppercase tracking-wider text-center">Free</TableHead>
+                                <TableHead className="font-bold text-xs uppercase tracking-wider text-center">Hits</TableHead>
+                                <TableHead className="font-bold text-xs uppercase tracking-wider text-center">Cost</TableHead>
+                                <TableHead className="font-bold text-xs uppercase tracking-wider text-right">Points</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
                               {team.transfers
                                 .sort((a, b) => b.gameweek - a.gameweek)
                                 .map((gw) => (
-                                  <TableRow key={gw.gameweek} className="border-[#DBC2CF] dark:border-[#19297C]">
-                                    <TableCell className="font-medium text-[#1A1F16] dark:text-[#FFFCF2]">
+                                  <TableRow key={gw.gameweek} className="border-border/50 hover:bg-muted/20">
+                                    <TableCell className="font-bold text-foreground">
                                       GW{gw.gameweek}
                                     </TableCell>
-                                    <TableCell>
-                                      <Badge variant="outline" className="border-[#DBC2CF] dark:border-[#19297C]">
+                                    <TableCell className="text-center">
+                                      <Badge variant="outline" className="border-border/50">
                                         {gw.transfersMade}
                                       </Badge>
                                     </TableCell>
-                                    <TableCell className="text-[#19297C] dark:text-[#DBC2CF]">
+                                    <TableCell className="text-center text-muted-foreground">
                                       {gw.freeTransfersUsed}/{gw.freeTransfersAvailable}
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="text-center">
                                       {gw.hits > 0 ? (
-                                        <Badge className="bg-[#F26430] text-white">
+                                        <Badge variant="destructive" className="font-bold">
                                           {gw.hits}
                                         </Badge>
                                       ) : (
-                                        <span className="text-[#19297C] dark:text-[#DBC2CF]">0</span>
+                                        <span className="text-muted-foreground">-</span>
                                       )}
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="text-center">
                                       {gw.hitCost < 0 ? (
-                                        <span className="text-[#F26430] font-bold font-mono">
+                                        <span className="text-destructive font-bold font-mono">
                                           {gw.hitCost}
                                         </span>
                                       ) : (
-                                        <span className="text-[#19297C] dark:text-[#DBC2CF]">0</span>
+                                        <span className="text-muted-foreground">-</span>
                                       )}
                                     </TableCell>
-                                    <TableCell className="font-mono font-bold text-[#028090]">
+                                    <TableCell className="text-right font-mono font-bold text-primary">
                                       {gw.gwPointsWithHits}
-                                    </TableCell>
-                                    <TableCell className="font-mono text-[#1A1F16] dark:text-[#FFFCF2]">
-                                      {gw.gwPoints}
                                     </TableCell>
                                   </TableRow>
                                 ))}
@@ -234,59 +222,54 @@ export default function TransfersPage() {
               </Card>
             </BlurFade>
 
-            {/* All Teams Comparison */}
             <BlurFade delay={0.15}>
-              <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
-                <CardHeader className="border-b border-[#DBC2CF] dark:border-[#19297C]">
-                  <CardTitle className="text-[#1A1F16] dark:text-[#FFFCF2]">All Teams Comparison</CardTitle>
+              <Card className="border-border/50">
+                <CardHeader className="border-b border-border/50 py-4">
+                  <CardTitle className="text-base uppercase tracking-wider font-bold">Transfer Efficiency</CardTitle>
                 </CardHeader>
-                <CardContent className="p-4">
-                  <div className="rounded-md border border-[#DBC2CF] dark:border-[#19297C] overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="rounded-md border-0 overflow-hidden">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-[#19297C] dark:bg-[#19297C] hover:bg-[#19297C]">
-                          <TableHead className="text-white">Team</TableHead>
-                          <TableHead className="text-white">Total Hits</TableHead>
-                          <TableHead className="text-white">Hit Cost</TableHead>
-                          <TableHead className="text-white">FPL Total</TableHead>
-                          <TableHead className="text-white">Points (No Hits)</TableHead>
-                          <TableHead className="text-white">Difference</TableHead>
+                        <TableRow className="bg-muted/50 hover:bg-muted/50 border-border/50">
+                          <TableHead className="font-bold text-xs uppercase tracking-wider">Manager</TableHead>
+                          <TableHead className="font-bold text-xs uppercase tracking-wider text-center">Total Hits</TableHead>
+                          <TableHead className="font-bold text-xs uppercase tracking-wider text-right">Hit Cost</TableHead>
+                          <TableHead className="font-bold text-xs uppercase tracking-wider text-right">Net Points</TableHead>
+                          <TableHead className="font-bold text-xs uppercase tracking-wider text-right">Delta</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {transferData
                           .sort((a, b) => b.totalHits - a.totalHits)
                           .map((team) => (
-                            <TableRow key={team.teamId} className="border-[#DBC2CF] dark:border-[#19297C]">
-                              <TableCell className="font-medium text-[#1A1F16] dark:text-[#FFFCF2]">
+                            <TableRow key={team.teamId} className="border-border/50 hover:bg-muted/20">
+                              <TableCell className="font-bold text-foreground">
                                 {team.userName}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="text-center">
                                 {team.totalHits > 0 ? (
-                                  <Badge className="bg-[#F26430] text-white">
+                                  <Badge variant="secondary" className="bg-destructive/10 text-destructive font-bold hover:bg-destructive/20">
                                     {team.totalHits}
                                   </Badge>
                                 ) : (
-                                  <span className="text-[#19297C] dark:text-[#DBC2CF]">0</span>
+                                  <span className="text-muted-foreground">-</span>
                                 )}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="text-right">
                                 {team.totalHitCost > 0 ? (
-                                  <span className="text-[#F26430] font-bold font-mono">
+                                  <span className="text-destructive font-bold font-mono">
                                     -{team.totalHitCost}
                                   </span>
                                 ) : (
-                                  <span className="text-[#19297C] dark:text-[#DBC2CF]">0</span>
+                                  <span className="text-muted-foreground">-</span>
                                 )}
                               </TableCell>
-                              <TableCell className="font-mono font-bold text-[#028090]">
+                              <TableCell className="text-right font-mono font-bold text-primary">
                                 {team.totalGwPointsWithHits}
                               </TableCell>
-                              <TableCell className="font-mono text-[#1A1F16] dark:text-[#FFFCF2]">
-                                {team.totalGwPoints}
-                              </TableCell>
-                              <TableCell>
-                                <span className="text-[#F26430] font-mono">
+                              <TableCell className="text-right">
+                                <span className="text-destructive font-mono text-sm">
                                   -{team.totalHitCost}
                                 </span>
                               </TableCell>

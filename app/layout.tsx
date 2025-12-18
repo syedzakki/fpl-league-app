@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
-import { Inter, JetBrains_Mono } from "next/font/google"
+import { Inter, JetBrains_Mono, Oswald } from "next/font/google"
 import "./globals.css"
 import { Navigation } from "@/components/navigation"
 import { ThemeProvider } from "@/components/theme-provider"
+import { TeamProvider } from "@/components/providers/team-provider"
 
 const inter = Inter({
   variable: "--font-inter",
@@ -12,6 +13,12 @@ const inter = Inter({
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  display: "swap",
+})
+
+const oswald = Oswald({
+  variable: "--font-oswald",
   subsets: ["latin"],
   display: "swap",
 })
@@ -32,7 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        className={`${inter.variable} ${jetbrainsMono.variable} ${oswald.variable} font-sans antialiased`}
       >
         <ThemeProvider
           attribute="class"
@@ -40,10 +47,12 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <Navigation />
-          <main className="relative min-h-screen">
-            {children}
-          </main>
+          <TeamProvider>
+            <Navigation />
+            <main className="relative min-h-screen md:pl-64 pt-14 pb-16 md:pb-0 md:pt-0 bg-background transition-all duration-300">
+              {children}
+            </main>
+          </TeamProvider>
         </ThemeProvider>
       </body>
     </html>
