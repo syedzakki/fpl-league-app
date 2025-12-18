@@ -197,71 +197,65 @@
 }
 
 .dark {
-  /* Vintage Striker Dark Mode (The Main Request) */
-  /* Palette: #1E1E24 (Grey), #92140C (Red), #FFF8F0 (White), #FFCF99 (Peach), #111D4A (Blue) */
+  /* Shadcn Neutral Dark Theme - OKLCH Color Space */
 
-  --background: #1E1E24;
-  /* Shadow Grey - Main Background */
-  --foreground: #FFF8F0;
-  /* Floral White - Text */
+  --background: oklch(0.145 0 0);
+  /* Deep neutral background */
+  --foreground: oklch(0.985 0 0);
+  /* Near-white text */
 
-  --card: #111D4A;
-  /* Space Indigo - Cards/Panels */
-  --card-foreground: #FFF8F0;
+  --card: oklch(0.205 0 0);
+  /* Slightly lighter than background */
+  --card-foreground: oklch(0.985 0 0);
 
-  --popover: #111D4A;
-  --popover-foreground: #FFF8F0;
+  --popover: oklch(0.269 0 0);
+  --popover-foreground: oklch(0.985 0 0);
 
-  --primary: #FFCF99;
-  /* Apricot Cream - Primary Actions (High Contrast on Dark) */
-  --primary-foreground: #1E1E24;
-  /* Black/Grey Text on Peach */
+  --primary: oklch(0.922 0 0);
+  /* Light neutral for primary actions */
+  --primary-foreground: oklch(0.205 0 0);
+  /* Dark text on light primary */
 
-  --secondary: #2A3C69;
-  /* Lighter Space Indigo for secondary items */
-  --secondary-foreground: #FFF8F0;
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
 
-  --muted: #111D4A;
-  /* Space Indigo for muted backgrounds */
-  --muted-foreground: #A0AEC0;
-  /* Slate 400 for muted text */
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
 
-  --accent: #92140C;
-  /* Oxblood - Accent/Interactive */
-  --accent-foreground: #FFF8F0;
+  --accent: oklch(0.371 0 0);
+  --accent-foreground: oklch(0.985 0 0);
 
-  --destructive: #92140C;
-  /* Oxblood */
-  --destructive-foreground: #FFF8F0;
+  --destructive: oklch(0.704 0.191 22.216);
+  /* Red with chroma */
+  --destructive-foreground: oklch(0.985 0 0);
 
-  --border: #2A3C69;
-  /* Lighter Indigo border */
-  --input: #111D4A;
-  --ring: #FFCF99;
-  /* Apricot Ring */
+  --border: oklch(1 0 0 / 10%);
+  /* Subtle borders */
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
 
   /* Chart Colors */
-  --chart-1: #FFCF99;
-  /* Apricot */
-  --chart-2: #92140C;
-  /* Oxblood */
-  --chart-3: #111D4A;
-  /* Space Indigo (might need to check visibility on dark bg, maybe lighten) */
-  --chart-4: #FFF8F0;
-  /* Floral White */
-  --chart-5: #4DAA57;
-  /* Keep a Green for 'Success' semantics if needed, or map to Teal */
+  --chart-1: oklch(0.488 0.243 264.376);
+  /* Purple */
+  --chart-2: oklch(0.696 0.17 162.48);
+  /* Teal */
+  --chart-3: oklch(0.769 0.188 70.08);
+  /* Yellow */
+  --chart-4: oklch(0.627 0.265 303.9);
+  /* Magenta */
+  --chart-5: oklch(0.645 0.246 16.439);
+  /* Orange */
 
   /* Sidebar Specifics */
-  --sidebar: #1E1E24;
-  /* Match Background */
-  --sidebar-foreground: #FFF8F0;
-  --sidebar-primary: #FFCF99;
-  --sidebar-primary-foreground: #1E1E24;
-  --sidebar-accent: #111D4A;
-  --sidebar-accent-foreground: #FFF8F0;
-  --sidebar-border: #111D4A;
-  --sidebar-ring: #FFCF99;
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  /* Purple accent */
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.439 0 0);
 }
 
 @layer base {
