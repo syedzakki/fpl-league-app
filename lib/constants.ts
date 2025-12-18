@@ -1,6 +1,7 @@
 // League Constants
 
 export const LEAGUE_CONFIG = {
+  SEASON: "2024/25",
   FPL_BUY_IN: 2000,
   GW_BUY_IN: 100,
   CAPTAINCY_BUY_IN: 50,

@@ -10,6 +10,7 @@ import { BlurFade } from "@/components/ui/blur-fade"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { RefreshCw, Trophy, AlertCircle, ArrowRightLeft, ArrowUp, ArrowDown, ChevronsUpDown, Medal, Award } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { ShineBorder } from "@/components/ui/shine-border"
 import { GlobalRefresh } from "@/components/global-refresh"
 
 interface FPLLeaderboardEntry {
@@ -134,7 +135,8 @@ export default function FPLLeaderboardPage() {
           </Card>
         ) : (
           <BlurFade delay={0.1}>
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden relative border-border/50">
+              <ShineBorder className="absolute inset-0 w-full h-full pointer-events-none opacity-20" shineColor={["#A07CFE", "#FE8FB5", "#FFBE7B"]} duration={14} />
               <CardHeader className="py-4 px-6 border-b border-border/50 flex md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center space-x-3">
                   <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
