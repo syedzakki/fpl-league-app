@@ -11,6 +11,8 @@ export interface Match {
     minutes: number
     kickoff: string
     stats: Record<string, { h: { player: string, value: number }[], a: { player: string, value: number }[] }>
+    homeId: number
+    awayId: number
 }
 
 export interface Manager {

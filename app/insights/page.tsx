@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils"
 // Assuming we will create components/ui/switch.tsx next.
 import { Switch } from "@/components/ui/switch"
 import { useTeam } from "@/components/providers/team-provider"
+import { ManagerActions } from "@/components/insights/manager-actions"
 
 
 interface Fixture {
@@ -97,11 +98,12 @@ interface LeagueStats {
 import { ProtectedRoute } from "@/components/auth/protected-route"
 
 export default function InsightsPage() {
-  const { teamName } = useTeam()
+  const { teamName, selectedTeamId } = useTeam()
   const [fixtures, setFixtures] = useState<Fixture[]>([])
   const [injuries, setInjuries] = useState<InjuryInfo[]>([])
   const [recommendations, setRecommendations] = useState<RecommendationsData | null>(null)
   const [leagueStats, setLeagueStats] = useState<LeagueStats[]>([])
+  const [myTeamPicks, setMyTeamPicks] = useState<any[]>([])
   const [teams, setTeams] = useState<any[]>([])
   const [currentGw, setCurrentGw] = useState<number>(1)
   const [completedGWs, setCompletedGWs] = useState<number>(0)
@@ -113,17 +115,23 @@ export default function InsightsPage() {
     try {
       setLoading(true)
 
-      const [fplResponse, recsResponse, fplDataResponse, fixturesResponse] = await Promise.all([
+      const [fplResponse, recsResponse, fplDataResponse, fixturesResponse, myTeamResponse] = await Promise.all([
         fetch("/api/fpl"),
         fetch("/api/recommendations"),
         fetch("/api/fpl-data"),
         fetch("/api/fixtures"),
+        selectedTeamId ? fetch(`/api/my-team?teamId=${selectedTeamId}`) : Promise.resolve(null)
       ])
 
       const fplData = await fplResponse.json()
       const recsData = await recsResponse.json()
       const fplLeagueData = await fplDataResponse.json()
       const allFixtures = await fixturesResponse.json()
+      const myTeamData = myTeamResponse ? await myTeamResponse.json() : null
+
+      if (myTeamData?.success) {
+        setMyTeamPicks(myTeamData.data.picks || [])
+      }
 
       if (fplData.success) {
         setInjuries(fplData.data.injuries || [])
@@ -229,24 +237,37 @@ export default function InsightsPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-background pb-20 md:pb-6">
-        <div className="container mx-auto px-4 py-8">
+      <div className="min-h-screen bg-background pb-20 md:pb-6 relative overflow-hidden">
+        {/* Background Mesh/Glow */}
+        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-primary/5 blur-[120px] -z-10 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-blue-500/5 blur-[120px] -z-10 pointer-events-none" />
+
+        <div className="container mx-auto px-4 py-8 relative">
           <BlurFade delay={0}>
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
               <div>
-                <h1 className="text-3xl font-sports font-bold uppercase italic tracking-wide flex items-center gap-2">
-                  FPL Insights
-                  {aiMode && <Badge variant="outline" className="border-primary text-primary text-xs tracking-normal normal-case"><Bot className="w-3 h-3 mr-1" /> AI Enhanced</Badge>}
+                <div className="flex items-center gap-3 mb-2">
+                  <Badge variant="outline" className="text-[10px] font-black uppercase tracking-[0.2em] border-primary/20 text-primary bg-primary/5">Intelligence</Badge>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/20">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
+                    </span>
+                    Live Analysis
+                  </span>
+                </div>
+                <h1 className="text-4xl md:text-6xl font-sports font-black uppercase italic tracking-wide text-foreground leading-none">
+                  FPL <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.3)]">Insights</span>
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1">League analytics, schedule, injuries, and recommendations</p>
+                <p className="text-sm text-muted-foreground mt-3 font-medium">Advanced league analytics, fixture forecasting, and scouting reports.</p>
               </div>
 
-              <div className="flex flex-col md:flex-row gap-3 items-end md:items-center">
-                <div className="flex items-center gap-2 bg-card border border-border px-3 py-1.5 rounded-lg shadow-sm">
+              <div className="flex flex-wrap gap-3 items-center">
+                <div className="flex items-center gap-2 bg-card/50 backdrop-blur-md border border-border/50 px-3 py-2 rounded-xl shadow-lg">
                   <Switch id="ai-mode" checked={aiMode} onCheckedChange={setAiMode} />
-                  <label htmlFor="ai-mode" className="text-sm cursor-pointer select-none flex items-center gap-1.5 font-medium">
-                    <Sparkles className={`w-4 h-4 ${aiMode ? "text-primary fill-primary/20" : "text-muted-foreground"}`} />
-                    AI Mode
+                  <label htmlFor="ai-mode" className="text-[11px] cursor-pointer select-none flex items-center gap-2 font-black uppercase tracking-widest">
+                    <Sparkles className={cn("w-4 h-4 transition-colors", aiMode ? "text-primary fill-primary/20" : "text-muted-foreground/40")} />
+                    AI Engine
                   </label>
                 </div>
                 <div className="flex gap-2">
@@ -255,9 +276,9 @@ export default function InsightsPage() {
                     disabled={loading}
                     variant="outline"
                     size="sm"
-                    className="gap-2"
+                    className="gap-2 h-10 rounded-xl border-border/50 bg-card/30 backdrop-blur-md hover:bg-muted/50 transition-all font-bold uppercase tracking-wider text-[11px]"
                   >
-                    <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+                    <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
                     Sync
                   </Button>
                   <GlobalRefresh />
@@ -267,36 +288,41 @@ export default function InsightsPage() {
           </BlurFade>
 
           {loading ? (
-            <LoadingSpinner text="Analyzing FPL data..." />
+            <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+              <Bot className="w-16 h-16 text-primary mb-4 animate-bounce" />
+              <p className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground">Synthesizing Data...</p>
+            </div>
           ) : (
             <BlurFade delay={0.1}>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                <TabsList className="bg-muted/50 p-1 flex flex-wrap h-auto gap-1">
-                  <TabsTrigger value="transfers" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                    <ArrowRightLeft className="h-4 w-4" />
-                    Transfers
-                  </TabsTrigger>
-                  <TabsTrigger value="recommendations" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                    <TrendingUp className="h-4 w-4" />
-                    Picks
-                  </TabsTrigger>
-                  <TabsTrigger value="bestteam" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                    <Star className="h-4 w-4" />
-                    Best Team
-                  </TabsTrigger>
-                  <TabsTrigger value="leaguestats" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                    <BarChart3 className="h-4 w-4" />
-                    League Stats
-                  </TabsTrigger>
-                  <TabsTrigger value="schedule" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                    <Calendar className="h-4 w-4" />
-                    Schedule
-                  </TabsTrigger>
-                  <TabsTrigger value="injuries" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                    <AlertTriangle className="h-4 w-4" />
-                    Injuries
-                  </TabsTrigger>
-                </TabsList>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+                <div className="overflow-x-auto pb-4 -mx-4 px-4 no-scrollbar">
+                  <TabsList className="bg-muted/10 p-1 rounded-2xl border border-border/20 backdrop-blur-sm w-full md:w-max flex">
+                    <TabsTrigger value="transfers" className="flex-1 md:flex-none items-center gap-2 px-6 h-11 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all font-bold uppercase tracking-widest text-[10px]">
+                      <ArrowRightLeft className="h-4 w-4" />
+                      Transfers
+                    </TabsTrigger>
+                    <TabsTrigger value="recommendations" className="flex-1 md:flex-none items-center gap-2 px-6 h-11 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all font-bold uppercase tracking-widest text-[10px]">
+                      <TrendingUp className="h-4 w-4" />
+                      Scouting
+                    </TabsTrigger>
+                    <TabsTrigger value="bestteam" className="flex-1 md:flex-none items-center gap-2 px-6 h-11 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all font-bold uppercase tracking-widest text-[10px]">
+                      <Star className="h-4 w-4" />
+                      Optimal XI
+                    </TabsTrigger>
+                    <TabsTrigger value="leaguestats" className="flex-1 md:flex-none items-center gap-2 px-6 h-11 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all font-bold uppercase tracking-widest text-[10px]">
+                      <BarChart3 className="h-4 w-4" />
+                      League Meta
+                    </TabsTrigger>
+                    <TabsTrigger value="schedule" className="flex-1 md:flex-none items-center gap-2 px-6 h-11 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all font-bold uppercase tracking-widest text-[10px]">
+                      <Calendar className="h-4 w-4" />
+                      FDR Map
+                    </TabsTrigger>
+                    <TabsTrigger value="injuries" className="flex-1 md:flex-none items-center gap-2 px-6 h-11 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all font-bold uppercase tracking-widest text-[10px]">
+                      <AlertTriangle className="h-4 w-4" />
+                      Medical Room
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
 
                 <TabsContent value="transfers" className="space-y-6">
                   <TopTransfersDisplay />
@@ -478,7 +504,18 @@ export default function InsightsPage() {
                   </Card>
                 </TabsContent>
 
-                <TabsContent value="recommendations" className="space-y-6">
+                <TabsContent value="recommendations" className="space-y-8">
+                  {/* Manager Priority Actions */}
+                  {myTeamPicks.length > 0 && recommendations && (
+                    <BlurFade delay={0.2}>
+                      <ManagerActions
+                        myTeamPicks={myTeamPicks}
+                        recommendations={recommendations.recommendations}
+                        isLoading={loading}
+                      />
+                    </BlurFade>
+                  )}
+
                   {recommendations ? (
                     <>
                       {recommendations.isForNextGameweek && (

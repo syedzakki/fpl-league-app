@@ -97,6 +97,7 @@ export interface LeaderboardEntry {
   lastFinishes: number;
   captaincyWins: number;
   netFinancial: number;
+  overallRank?: number;
   gameweekHistory?: GameweekDetail[];
 }
 

@@ -9,7 +9,7 @@ import { BlurFade } from "@/components/ui/blur-fade"
 import { NextDeadlineWidget } from "@/components/dashboard/deadline-countdown"
 import { LiveRankCard } from "@/components/dashboard/live-rank-card"
 import { RivalWatch } from "@/components/dashboard/rival-watch"
-import { RefreshCw, Trophy, TrendingUp, Info, ArrowRight } from "lucide-react"
+import { RefreshCw, Trophy, TrendingUp, Info, ArrowRight, Users } from "lucide-react"
 import type { LeaderboardEntry } from "@/lib/types"
 import { LEAGUE_CONFIG } from "@/lib/constants"
 import { GlobalRefresh } from "@/components/global-refresh"
@@ -52,6 +52,7 @@ export default function Dashboard() {
                     secondFinishes: team.secondFinishes || 0,
                     lastFinishes: team.lastFinishes || 0,
                     captaincyWins: team.captaincyWins || 0,
+                    overallRank: team.overallRank || 0,
                     netFinancial: 0,
                 }))
                 setLeaderboard(entries)
@@ -105,17 +106,26 @@ export default function Dashboard() {
 
     // Derived Data
     const myTeam = leaderboard.find(l => l.teamName === teamName) || leaderboard[0]
+
     // Filter rivals: everyone except me, take top 5
     const rivals = leaderboard
         .filter(l => l.teamName !== teamName)
         .slice(0, 5)
-        .map((l, i) => ({
-            name: l.teamName,
-            teamName: `Team ${l.teamName}`,
-            points: l.totalPoints,
-            rank: l.position,
-            captain: "Haaland" // Placeholder
-        }))
+        .map((l, i) => {
+            const prevHistory = positionHistory.length > 1 ? positionHistory[positionHistory.length - 2] : null
+            const lastRank = prevHistory ? prevHistory[l.teamName] : l.position
+
+            return {
+                name: l.teamName,
+                teamName: `Team ${l.teamName}`,
+                points: l.totalPoints,
+                rank: l.position,
+                captain: "Haaland", // Still placeholder until we have real pick data
+                isUp: lastRank > l.position,
+                isDown: lastRank < l.position,
+                gap: myTeam ? l.totalPoints - myTeam.totalPoints : 0
+            }
+        })
 
     const previousHistory = positionHistory.length > 1 ? positionHistory[positionHistory.length - 2] : null
     const myLastRank = previousHistory && myTeam ? previousHistory[myTeam.teamName] : undefined
@@ -159,52 +169,68 @@ export default function Dashboard() {
                     </BlurFade>
 
                     {/* Hero Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
-                        <BlurFade delay={0.1} className="md:col-span-5 lg:col-span-4">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-6">
+                        <BlurFade delay={0.1} className="md:col-span-5 lg:col-span-4 h-full">
                             <NextDeadlineWidget />
                         </BlurFade>
 
-                        <BlurFade delay={0.2} className="md:col-span-4 lg:col-span-4">
+                        <BlurFade delay={0.2} className="md:col-span-4 lg:col-span-4 h-full">
                             <LiveRankCard
                                 rank={myTeam?.position || 0}
                                 lastRank={myLastRank}
+                                overallRank={myTeam?.overallRank}
                                 points={myTeam?.totalPoints || 0}
                                 isLoading={loading}
                             />
                         </BlurFade>
 
-                        <BlurFade delay={0.3} className="md:col-span-3 lg:col-span-4 grid grid-cols-2 md:grid-cols-1 md:grid-rows-2 gap-3 md:gap-4">
-                            <Card className="flex flex-col justify-center px-4 py-3 md:px-6 bg-primary/5 border-primary/20 relative overflow-hidden">
-                                <div className="absolute top-2 right-2">
+                        <BlurFade delay={0.3} className="md:col-span-3 lg:col-span-4 grid grid-cols-1 gap-4 lg:gap-6">
+                            <Card className="flex flex-col justify-center px-6 py-4 bg-primary/5 border-primary/20 relative overflow-hidden group">
+                                <div className="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <div className="w-24 h-24 rounded-full bg-primary" />
+                                </div>
+                                <div className="absolute top-4 right-4 leading-none">
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger>
-                                                <Info className="w-4 h-4 text-primary/50" />
+                                                <Info className="w-4 h-4 text-primary/40 hover:text-primary transition-colors" />
                                             </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>Total pot value based on buy-ins and weekly contributions</p>
+                                            <TooltipContent className="bg-popover border-border/50 text-popover-foreground">
+                                                <p className="max-w-xs text-xs">Total pot value calculated from league buy-ins and weekly gameweek/captaincy contributions.</p>
                                             </TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
                                 </div>
-                                <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Total Pot</div>
-                                <div className="text-2xl md:text-3xl font-mono font-bold text-primary">₹{totalPot}</div>
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-black mb-1 opacity-70">Total League Pot</p>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-sm font-bold text-primary">₹</span>
+                                    <span className="text-4xl font-mono font-black text-primary drop-shadow-[0_4px_12px_rgba(var(--primary),0.3)]">
+                                        {totalPot.toLocaleString()}
+                                    </span>
+                                </div>
                             </Card>
-                            <Card className="flex flex-col justify-center px-4 py-3 md:px-6 bg-secondary/30 relative">
-                                <div className="absolute top-2 right-2">
+
+                            <Card className="flex flex-col justify-center px-6 py-4 bg-muted/20 border-border/50 relative overflow-hidden group">
+                                <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <Users className="w-24 h-24" />
+                                </div>
+                                <div className="absolute top-4 right-4 leading-none">
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger>
-                                                <Info className="w-4 h-4 text-muted-foreground/50" />
+                                                <Info className="w-4 h-4 text-muted-foreground/40 hover:text-foreground transition-colors" />
                                             </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>Number of active managers in the league</p>
+                                            <TooltipContent className="bg-popover border-border/50 text-popover-foreground">
+                                                <p className="max-w-xs text-xs">Total number of active managers competing in this league season.</p>
                                             </TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
                                 </div>
-                                <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Active Players</div>
-                                <div className="text-2xl md:text-3xl font-mono font-bold">{leaderboard.length}</div>
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-black mb-1 opacity-70">Active Managers</p>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-4xl font-mono font-black">{leaderboard.length}</span>
+                                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Players</span>
+                                </div>
                             </Card>
                         </BlurFade>
                     </div>

@@ -106,7 +106,9 @@ export async function GET(req: Request) {
                 finished: f.finished,
                 minutes: f.minutes,
                 kickoff: f.kickoff_time,
-                stats: statsBreakdown
+                stats: statsBreakdown,
+                homeId: f.team_h,
+                awayId: f.team_a
             }
         })
 

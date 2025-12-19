@@ -21,12 +21,29 @@ import { MatchStatsBreakdown } from "@/components/live-watch/match-stats-breakdo
 
 import { ProtectedRoute } from "@/components/auth/protected-route"
 
+import { useTeam } from "@/components/providers/team-provider"
+
 export default function LiveWatchPage() {
+    const { selectedTeamId } = useTeam()
     const [data, setData] = useState<{ gameweek: number, matches: Match[], managers: Manager[] } | null>(null)
+    const [myPlayers, setMyPlayers] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [refreshing, setRefreshing] = useState(false)
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
     const [error, setError] = useState<string | null>(null)
+
+    const fetchMyPlayers = async () => {
+        if (!selectedTeamId) return
+        try {
+            const res = await fetch(`/api/my-team?teamId=${selectedTeamId}`)
+            const json = await res.json()
+            if (json.success) {
+                setMyPlayers(json.data.picks || [])
+            }
+        } catch (err) {
+            console.error("Failed to fetch my players:", err)
+        }
+    }
 
     const fetchLiveStats = async () => {
         try {
@@ -49,9 +66,16 @@ export default function LiveWatchPage() {
 
     useEffect(() => {
         fetchLiveStats()
+        fetchMyPlayers()
         const interval = setInterval(fetchLiveStats, 60000) // Refresh every minute
         return () => clearInterval(interval)
-    }, [])
+    }, [selectedTeamId])
+
+    const formattedMyPlayers = myPlayers.map(p => ({
+        id: p.element,
+        name: p.web_name,
+        teamId: p.team
+    }))
 
     const liveMatches = data?.matches.filter(m => m.started && !m.finished) || []
     const upcomingMatches = data?.matches.filter(m => !m.started) || []
@@ -110,7 +134,13 @@ export default function LiveWatchPage() {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {liveMatches.map((m, i) => (
-                                        <MatchCard key={m.id} match={m} index={i} onClick={() => setSelectedMatch(m)} />
+                                        <MatchCard
+                                            key={m.id}
+                                            match={m}
+                                            index={i}
+                                            onClick={() => setSelectedMatch(m)}
+                                            myPlayers={formattedMyPlayers}
+                                        />
                                     ))}
                                 </div>
                             </div>
@@ -153,6 +183,7 @@ export default function LiveWatchPage() {
                                                     match={m}
                                                     index={i + groupIndex * 10}
                                                     onClick={() => setSelectedMatch(m)}
+                                                    myPlayers={formattedMyPlayers}
                                                 />
                                             ))}
                                         </div>
@@ -168,11 +199,17 @@ export default function LiveWatchPage() {
                                     <div className="p-1 px-2 rounded-md bg-muted text-muted-foreground">
                                         <ChevronRight className="w-3.5 h-3.5" />
                                     </div>
-                                    <h3 className="text-sm font-bold uppercase tracking-[0.3em] text-muted-foreground">Finished Today</h3>
+                                    <h3 className="text-sm font-bold uppercase tracking-[0.3em] text-foreground/90">Finished Today</h3>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-70">
                                     {finishedMatches.slice(0, 3).map((m, i) => (
-                                        <MatchCard key={m.id} match={m} index={i} onClick={() => setSelectedMatch(m)} />
+                                        <MatchCard
+                                            key={m.id}
+                                            match={m}
+                                            index={i}
+                                            onClick={() => setSelectedMatch(m)}
+                                            myPlayers={formattedMyPlayers}
+                                        />
                                     ))}
                                 </div>
                             </div>

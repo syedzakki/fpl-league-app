@@ -7,16 +7,19 @@ import { BlurFade } from "@/components/ui/blur-fade"
 import { cn } from "@/lib/utils"
 import { Match } from "./types"
 
-interface MatchCardProps {
+export interface MatchCardProps {
     match: Match
     index: number
     onClick?: () => void
+    myPlayers?: { id: number; name: string; teamId: number }[]
 }
 
-export function MatchCard({ match, index, onClick }: MatchCardProps) {
+export function MatchCard({ match, index, onClick, myPlayers = [] }: MatchCardProps) {
     const kickoffDate = new Date(match.kickoff)
     const timeStr = kickoffDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     const dayStr = kickoffDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+
+    const playersInThisMatch = myPlayers.filter(p => p.teamId === match.homeId || p.teamId === match.awayId);
 
     return (
         <BlurFade delay={0.1 + index * 0.05}>
@@ -51,6 +54,11 @@ export function MatchCard({ match, index, onClick }: MatchCardProps) {
                                     {dayStr}
                                 </span>
                             )}
+                            {playersInThisMatch.length > 0 && (
+                                <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tight h-4 px-1 border-primary/30 text-primary bg-primary/5">
+                                    {playersInThisMatch.length} OF MY SQUAD
+                                </Badge>
+                            )}
                         </div>
                         <span className="font-mono text-[11px] font-bold text-muted-foreground flex items-center gap-1.5">
                             {match.started && !match.finished && <Activity className="w-3 h-3 text-primary animate-pulse" />}
@@ -58,41 +66,36 @@ export function MatchCard({ match, index, onClick }: MatchCardProps) {
                         </span>
                     </div>
 
-                    <div className="flex items-center justify-between gap-2">
-                        <div className="flex-1 flex flex-col items-start min-w-0">
-                            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground mb-0.5 opacity-70">
-                                {match.homeShort}
-                            </span>
-                            <span className="text-sm font-sports font-bold tracking-tight truncate w-full group-hover:text-primary transition-colors">
-                                {match.home}
-                            </span>
-                        </div>
-
-                        <div className="flex flex-col items-center gap-1 shrink-0 px-4">
-                            <div className={cn(
-                                "font-sports font-black text-2xl tracking-tighter flex items-center gap-2 px-3 py-1 rounded-lg",
-                                match.started ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground/50 italic opacity-50"
-                            )}>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3 flex-1">
+                                <span className="font-sports text-xl font-black italic tracking-tight text-foreground/90 uppercase">{match.homeShort}</span>
+                            </div>
+                            <div className="flex flex-col items-center px-4">
                                 {match.started ? (
-                                    <>
-                                        <span>{match.homeScore}</span>
-                                        <span className="text-muted-foreground/30 text-lg">:</span>
-                                        <span>{match.awayScore}</span>
-                                    </>
+                                    <span className="font-mono text-2xl font-black tracking-tighter text-foreground tabular-nums">
+                                        {match.homeScore} <span className="text-muted-foreground/30 text-lg mx-1">-</span> {match.awayScore}
+                                    </span>
                                 ) : (
-                                    <span className="text-lg">VS</span>
+                                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted/20 px-2 py-0.5 rounded-full">VS</span>
                                 )}
+                            </div>
+                            <div className="flex items-center gap-3 flex-1 justify-end">
+                                <span className="font-sports text-xl font-black italic tracking-tight text-foreground/90 uppercase text-right">{match.awayShort}</span>
                             </div>
                         </div>
 
-                        <div className="flex-1 flex flex-col items-end min-w-0">
-                            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground mb-0.5 opacity-70">
-                                {match.awayShort}
-                            </span>
-                            <span className="text-sm font-sports font-bold tracking-tight truncate w-full text-right group-hover:text-primary transition-colors">
-                                {match.away}
-                            </span>
-                        </div>
+                        {playersInThisMatch.length > 0 && (
+                            <div className="pt-3 border-t border-border/10">
+                                <div className="flex flex-wrap gap-1">
+                                    {playersInThisMatch.map(p => (
+                                        <span key={p.id} className="text-[8px] font-bold py-0.5 px-1.5 rounded bg-primary/5 border border-primary/10 text-primary/70 uppercase">
+                                            {p.name}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </CardHeader>
 
