@@ -6,7 +6,21 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { RefreshCw, Trophy, Medal, AlertCircle, Radio, CheckCircle2, Calendar, TrendingUp } from "lucide-react"
+import {
+  RefreshCw,
+  Trophy,
+  Medal,
+  AlertCircle,
+  Radio,
+  CheckCircle2,
+  Calendar,
+  TrendingUp,
+  Zap,
+  ChevronRight,
+  PieChart,
+  LayoutDashboard,
+  Users
+} from "lucide-react"
 import { LEAGUE_CONFIG } from "@/lib/constants"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { BlurFade } from "@/components/ui/blur-fade"
@@ -14,6 +28,12 @@ import { DeadlineCountdown } from "@/components/deadline-countdown"
 import { FixturesDisplay } from "@/components/fixtures-display"
 import { GlobalRefresh } from "@/components/global-refresh"
 import { cn } from "@/lib/utils"
+
+// Live Watch Components
+import { Match, Manager } from "@/components/live-watch/types"
+import { MatchCard } from "@/components/live-watch/match-card"
+import { ManagerLiveCard } from "@/components/live-watch/manager-live-card"
+import { MatchStatsBreakdown } from "@/components/live-watch/match-stats-breakdown"
 
 interface TeamResult {
   teamId: string
@@ -51,6 +71,32 @@ export default function GameweeksPage() {
   const [loading, setLoading] = useState(true)
   const [currentGW, setCurrentGW] = useState<number>(1)
   const [nextDeadline, setNextDeadline] = useState<string | null>(null)
+
+  // Rich Analysis Data
+  const [liveWatchData, setLiveWatchData] = useState<{ matches: Match[], managers: Manager[] } | null>(null)
+  const [loadingLive, setLoadingLive] = useState(false)
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
+
+  const fetchLiveWatchData = async (gw: number) => {
+    try {
+      setLoadingLive(true)
+      const res = await fetch(`/api/live-watch?gw=${gw}`)
+      const json = await res.json()
+      if (json.success) {
+        setLiveWatchData(json.data)
+      }
+    } catch (e) {
+      console.error("Error fetching live watch data for central:", e)
+    } finally {
+      setLoadingLive(false)
+    }
+  }
+
+  useEffect(() => {
+    if (selectedGW) {
+      fetchLiveWatchData(selectedGW)
+    }
+  }, [selectedGW])
 
   const fetchData = async () => {
     try {
@@ -298,10 +344,104 @@ export default function GameweeksPage() {
                   </Card>
                 </BlurFade>
 
+                {/* Rich Performance Analysis */}
+                <div className="space-y-8 animate-in fade-in duration-500">
+                  <div className="flex items-center gap-3 px-1">
+                    <PieChart className="w-5 h-5 text-primary" />
+                    <h2 className="text-xl font-sports font-bold tracking-tight uppercase italic">Historical Deep Dive</h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Managers Performance Section */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+                          <Users className="w-4 h-4" /> Manager Performance
+                        </h3>
+                      </div>
+
+                      {loadingLive ? (
+                        <div className="flex justify-center p-12 bg-muted/20 rounded-xl border border-dashed border-border/50">
+                          <RefreshCw className="w-6 h-6 animate-spin text-primary/40" />
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {liveWatchData?.managers
+                            .sort((a, b) => b.totalLivePoints - a.totalLivePoints)
+                            .map((manager, i) => (
+                              <div key={manager.id} className="h-full">
+                                <ManagerLiveCard manager={manager} index={i} />
+                              </div>
+                            ))
+                          }
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Match Center Section */}
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+                        <LayoutDashboard className="w-4 h-4" /> Match Analysis
+                      </h3>
+
+                      {loadingLive ? (
+                        <div className="flex justify-center p-12 bg-muted/20 rounded-xl border border-dashed border-border/50">
+                          <RefreshCw className="w-6 h-6 animate-spin text-primary/40" />
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-4">
+                          {liveWatchData?.matches.map((m, i) => (
+                            <MatchCard key={m.id} match={m} index={i} onClick={() => setSelectedMatch(m)} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Match Detail Dialog */}
+                {selectedMatch && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <Card className="w-full max-w-2xl max-h-[80vh] overflow-y-auto relative shadow-2xl border-primary/20">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-4 right-4 z-10"
+                        onClick={() => setSelectedMatch(null)}
+                      >
+                        <ChevronRight className="rotate-90" />
+                      </Button>
+                      <CardHeader className="text-center border-b border-border/50 bg-muted/5">
+                        <div className="flex items-center justify-center gap-6 mb-4">
+                          <div className="text-center">
+                            <div className="text-xs font-bold uppercase text-muted-foreground mb-1">Home</div>
+                            <div className="text-xl font-sports font-bold tracking-tight">{selectedMatch.home}</div>
+                          </div>
+                          <div className="text-4xl font-sports font-black flex items-center gap-3">
+                            <span>{selectedMatch.homeScore}</span>
+                            <span className="text-muted-foreground/30 text-2xl">-</span>
+                            <span>{selectedMatch.awayScore}</span>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xs font-bold uppercase text-muted-foreground mb-1">Away</div>
+                            <div className="text-xl font-sports font-bold tracking-tight">{selectedMatch.away}</div>
+                          </div>
+                        </div>
+                        <div className="flex justify-center">
+                          <Badge variant="secondary" className="font-mono">{selectedMatch.finished ? "FT" : `${selectedMatch.minutes}'`}</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-6 space-y-6">
+                        <MatchStatsBreakdown stats={selectedMatch.stats} />
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
                 {currentFixtures.length > 0 && (
                   <BlurFade delay={0.25}>
                     <div className="pt-4">
-                      <h3 className="text-lg font-sports font-bold text-muted-foreground mb-4 px-1">Fixtures</h3>
+                      <h3 className="text-lg font-sports font-bold text-muted-foreground mb-4 px-1">League Fixtures</h3>
                       <FixturesDisplay fixtures={currentFixtures} gameweek={selectedGW || 1} />
                     </div>
                   </BlurFade>
