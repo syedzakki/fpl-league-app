@@ -108,9 +108,16 @@ export function DeadlineCountdown({ deadline, gameweek, className }: DeadlineCou
         <Card className={cn("p-6 flex flex-col items-center justify-center relative overflow-hidden bg-card/50 backdrop-blur-sm border-border/50 h-full", className)}>
             <BorderBeam size={150} duration={8} delay={0} colorFrom="#FFCF99" colorTo="#92140C" />
 
-            <div className="flex items-center gap-2 mb-4 text-muted-foreground uppercase tracking-widest text-[10px] font-bold z-10">
-                <AlarmClock className={cn("h-3 w-3", isUrgent && "text-destructive animate-pulse")} />
-                <span>GW {gameweek} Deadline</span>
+            <div className="flex flex-col items-center gap-2 mb-6 z-10">
+                <div className="flex items-center gap-2 text-muted-foreground uppercase tracking-widest text-[10px] font-bold">
+                    <AlarmClock className={cn("h-3 w-3", isUrgent && "text-destructive animate-pulse")} />
+                    <span>GW {gameweek} Deadline</span>
+                </div>
+                {isUrgent && (
+                    <span className="inline-block px-3 py-1 rounded-full text-[9px] font-bold bg-destructive/20 text-destructive animate-pulse border border-destructive/30 uppercase tracking-tighter">
+                        HURRY UP!
+                    </span>
+                )}
             </div>
 
             <div className="flex items-end gap-2 sm:gap-4 font-sports z-10">
@@ -120,14 +127,6 @@ export function DeadlineCountdown({ deadline, gameweek, className }: DeadlineCou
                 <span className="text-2xl sm:text-4xl font-light text-muted-foreground/30 mb-2">:</span>
                 <TimeUnit value={timeLeft.minutes} label="Mins" isUrgent={isUrgent} />
             </div>
-
-            {isUrgent && (
-                <div className="absolute bottom-4 left-0 right-0 text-center z-10">
-                    <span className="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-destructive/20 text-destructive animate-pulse border border-destructive/30">
-                        HURRY UP!
-                    </span>
-                </div>
-            )}
         </Card>
     )
 }

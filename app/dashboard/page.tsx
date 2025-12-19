@@ -232,16 +232,21 @@ export default function Dashboard() {
 
                     <BlurFade delay={0.5} className="lg:col-span-2">
                         <Card className="h-full flex flex-col">
-                            <CardHeader className="flex flex-row items-center justify-between py-3 px-4 sm:px-6 border-b border-border/50">
-                                <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-                                    <Trophy className="h-4 w-4 text-primary shrink-0" />
-                                    <span className="truncate">Live Leaderboard</span>
-                                </CardTitle>
+                            <CardHeader className="flex flex-row items-center justify-between py-4 px-6 border-b border-border/50 bg-muted/5">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-primary/10">
+                                        <Trophy className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <CardTitle className="text-base font-bold uppercase italic tracking-tight">
+                                        Live Leaderboard
+                                    </CardTitle>
+                                </div>
                                 <Link
                                     href="/leaderboard-fpl"
-                                    className="text-[10px] sm:text-xs text-primary hover:underline font-medium whitespace-nowrap ml-2"
+                                    className="text-xs text-primary hover:text-primary/80 transition-colors font-bold uppercase tracking-widest flex items-center gap-1 group"
                                 >
-                                    Detailed View →
+                                    Detailed View
+                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                 </Link>
                             </CardHeader>
                             <CardContent className="p-0 flex-1">
