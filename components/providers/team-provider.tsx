@@ -41,10 +41,13 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     }, [])
 
     const setCookie = (name: string, value: string | null) => {
+        const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+        const secureFlag = isLocalhost ? "" : "; Secure";
+
         if (value) {
-            document.cookie = `${name}=${value}; path=/; max-age=31536000; SameSite=Lax`;
+            document.cookie = `${name}=${value}; path=/; max-age=31536000; SameSite=Lax${secureFlag}`;
         } else {
-            document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
+            document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax${secureFlag}`;
         }
     }
 

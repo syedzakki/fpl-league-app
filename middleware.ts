@@ -5,7 +5,17 @@ export function middleware(request: NextRequest) {
     const teamId = request.cookies.get('fpl_selected_team_id')
     const { pathname } = request.nextUrl
 
-    // Protected routes
+    // 1. API Route Protection
+    if (pathname.startsWith('/api') && !pathname.startsWith('/api/cron')) {
+        if (!teamId) {
+            return NextResponse.json(
+                { success: false, error: 'Unauthorized' },
+                { status: 401 }
+            )
+        }
+    }
+
+    // 2. Page Route Protection
     const protectedRoutes = ['/dashboard', '/live-watch', '/leaderboard-fpl', '/leaderboard', '/teams', '/gameweeks', '/transfers', '/financials', '/insights', '/rules']
 
     const isProtected = protectedRoutes.some(route => pathname.startsWith(route))
@@ -14,7 +24,7 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/', request.url))
     }
 
-    // If already logged in and hitting landing page, redirect to dashboard
+    // 3. Authenticated Landing Page Redirect
     if (pathname === '/' && teamId) {
         return NextResponse.redirect(new URL('/dashboard', request.url))
     }
@@ -26,11 +36,10 @@ export const config = {
     matcher: [
         /*
          * Match all request paths except for the ones starting with:
-         * - api (API routes)
          * - _next/static (static files)
          * - _next/image (image optimization files)
          * - favicon.ico (favicon file)
          */
-        '/((?!api|_next/static|_next/image|favicon.ico).*)',
+        '/((?!_next/static|_next/image|favicon.ico).*)',
     ],
 }
