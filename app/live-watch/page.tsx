@@ -49,6 +49,10 @@ interface Manager {
         isCaptain: boolean
         isViceCaptain: boolean
         minutes: number
+        defcon: number
+        bps: number
+        hasCleanSheet: boolean
+        isDefensive: boolean
         stats: any[]
     }[]
 }
@@ -328,9 +332,14 @@ function ManagerLiveCard({ manager, index }: { manager: Manager, index: number }
                                             {player.minutes > 0 ? `${player.minutes}'` : "Not Started"}
                                         </span>
                                         {player.minutes > 0 && (
-                                            <Badge variant="outline" className="h-3.5 px-1 text-[8px] border-primary/20 bg-primary/5 text-primary">
-                                                DEFCON {player.defcon}
-                                            </Badge>
+                                            <div className="flex gap-1">
+                                                <Badge variant="outline" className="h-3.5 px-1 text-[8px] border-primary/20 bg-primary/5 text-primary">
+                                                    DEFCON {player.defcon}
+                                                </Badge>
+                                                <Badge variant="outline" className="h-3.5 px-1 text-[8px] border-muted-foreground/20 bg-muted/5 text-muted-foreground">
+                                                    BPS {player.bps}
+                                                </Badge>
+                                            </div>
                                         )}
                                         {player.isDefensive && player.minutes > 0 && player.hasCleanSheet && (
                                             <Badge variant="outline" className="h-3.5 px-1 text-[8px] border-blue-500/20 bg-blue-500/5 text-blue-500">

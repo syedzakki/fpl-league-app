@@ -96,8 +96,9 @@ export async function GET() {
 
                 livePoints += points
 
-                // Extract specific "Defcon" metrics (BPS, bonus progress, defensive stats)
-                const defcon = stats.bps || 0
+                // Extract specific "Defcon" metrics (Defensive Contribution points)
+                const defcon = stats.defensive_contribution || 0
+                const bps = stats.bps || 0
                 const hasCleanSheet = stats.clean_sheets > 0
                 const isDefensive = [1, 2].includes(playerInfo.element_type) // GKP or DEF
 
@@ -110,6 +111,7 @@ export async function GET() {
                     isViceCaptain: p.is_vice_captain,
                     minutes: stats.minutes || 0,
                     defcon: defcon,
+                    bps: bps,
                     hasCleanSheet,
                     isDefensive,
                     stats: playerLiveData?.explain?.[0]?.stats || [] // detailed points source
