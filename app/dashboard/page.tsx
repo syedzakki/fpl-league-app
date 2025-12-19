@@ -232,12 +232,15 @@ export default function Dashboard() {
 
                     <BlurFade delay={0.5} className="lg:col-span-2">
                         <Card className="h-full flex flex-col">
-                            <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border/50">
+                            <CardHeader className="flex flex-row items-center justify-between py-3 px-4 sm:px-6 border-b border-border/50">
                                 <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-                                    <Trophy className="h-4 w-4 text-primary" />
-                                    Live Leaderboard
+                                    <Trophy className="h-4 w-4 text-primary shrink-0" />
+                                    <span className="truncate">Live Leaderboard</span>
                                 </CardTitle>
-                                <Link href="/leaderboard-fpl" className="text-xs text-primary hover:underline font-medium">
+                                <Link
+                                    href="/leaderboard-fpl"
+                                    className="text-[10px] sm:text-xs text-primary hover:underline font-medium whitespace-nowrap ml-2"
+                                >
                                     Detailed View →
                                 </Link>
                             </CardHeader>
