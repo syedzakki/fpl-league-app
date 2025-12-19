@@ -91,9 +91,15 @@ export async function GET() {
             const players = picks.map((p: any) => {
                 const playerInfo = playersMap[p.element]
                 const playerLiveData = liveData.elements.find((e: any) => e.id === p.element)
-                const points = (playerLiveData?.stats?.total_points || 0) * p.multiplier
+                const stats = playerLiveData?.stats || {}
+                const points = (stats.total_points || 0) * p.multiplier
 
                 livePoints += points
+
+                // Extract specific "Defcon" metrics (BPS, bonus progress, defensive stats)
+                const defcon = stats.bps || 0
+                const hasCleanSheet = stats.clean_sheets > 0
+                const isDefensive = [1, 2].includes(playerInfo.element_type) // GKP or DEF
 
                 return {
                     id: p.element,
@@ -102,7 +108,10 @@ export async function GET() {
                     multiplier: p.multiplier,
                     isCaptain: p.is_captain,
                     isViceCaptain: p.is_vice_captain,
-                    minutes: playerLiveData?.stats?.minutes || 0,
+                    minutes: stats.minutes || 0,
+                    defcon: defcon,
+                    hasCleanSheet,
+                    isDefensive,
                     stats: playerLiveData?.explain?.[0]?.stats || [] // detailed points source
                 }
             })

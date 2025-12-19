@@ -327,6 +327,16 @@ function ManagerLiveCard({ manager, index }: { manager: Manager, index: number }
                                         <span className="text-[9px] text-muted-foreground uppercase tracking-tight">
                                             {player.minutes > 0 ? `${player.minutes}'` : "Not Started"}
                                         </span>
+                                        {player.minutes > 0 && (
+                                            <Badge variant="outline" className="h-3.5 px-1 text-[8px] border-primary/20 bg-primary/5 text-primary">
+                                                DEFCON {player.defcon}
+                                            </Badge>
+                                        )}
+                                        {player.isDefensive && player.minutes > 0 && player.hasCleanSheet && (
+                                            <Badge variant="outline" className="h-3.5 px-1 text-[8px] border-blue-500/20 bg-blue-500/5 text-blue-500">
+                                                CS
+                                            </Badge>
+                                        )}
                                         {player.points > 5 && <Star className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />}
                                     </div>
                                 </div>
