@@ -174,7 +174,7 @@ export default function Dashboard() {
                 </BlurFade>
 
                 {/* Hero Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
                     <BlurFade delay={0.1} className="md:col-span-5 lg:col-span-4">
                         <NextDeadlineWidget />
                     </BlurFade>
@@ -188,8 +188,8 @@ export default function Dashboard() {
                         />
                     </BlurFade>
 
-                    <BlurFade delay={0.3} className="md:col-span-3 lg:col-span-4 grid grid-rows-2 gap-4">
-                        <Card className="flex flex-col justify-center px-6 bg-primary/5 border-primary/20 relative overflow-hidden">
+                    <BlurFade delay={0.3} className="md:col-span-3 lg:col-span-4 grid grid-cols-2 md:grid-cols-1 md:grid-rows-2 gap-3 md:gap-4">
+                        <Card className="flex flex-col justify-center px-4 py-3 md:px-6 bg-primary/5 border-primary/20 relative overflow-hidden">
                             <div className="absolute top-2 right-2">
                                 <TooltipProvider>
                                     <Tooltip>
@@ -202,10 +202,10 @@ export default function Dashboard() {
                                     </Tooltip>
                                 </TooltipProvider>
                             </div>
-                            <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Total Pot</div>
-                            <div className="text-3xl font-mono font-bold text-primary">₹{totalPot}</div>
+                            <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Total Pot</div>
+                            <div className="text-2xl md:text-3xl font-mono font-bold text-primary">₹{totalPot}</div>
                         </Card>
-                        <Card className="flex flex-col justify-center px-6 bg-secondary/30 relative">
+                        <Card className="flex flex-col justify-center px-4 py-3 md:px-6 bg-secondary/30 relative">
                             <div className="absolute top-2 right-2">
                                 <TooltipProvider>
                                     <Tooltip>
@@ -218,8 +218,8 @@ export default function Dashboard() {
                                     </Tooltip>
                                 </TooltipProvider>
                             </div>
-                            <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Active Players</div>
-                            <div className="text-3xl font-mono font-bold">{leaderboard.length}</div>
+                            <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Active Players</div>
+                            <div className="text-2xl md:text-3xl font-mono font-bold">{leaderboard.length}</div>
                         </Card>
                     </BlurFade>
                 </div>

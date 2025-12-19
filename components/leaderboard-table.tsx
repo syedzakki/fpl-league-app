@@ -50,61 +50,63 @@ export function LeaderboardTable({ entries, showBorderBeam = false }: Leaderboar
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow className="bg-muted/20 border-b border-border/50 hover:bg-muted/20">
-          <TableHead className="py-2 px-3 font-bold text-muted-foreground text-[10px] uppercase tracking-wider w-[70px]">Pos</TableHead>
-          <TableHead className="py-2 px-3 font-bold text-muted-foreground text-[10px] uppercase tracking-wider">Team</TableHead>
-          <TableHead className="py-2 px-3 text-right font-bold text-muted-foreground text-[10px] uppercase tracking-wider w-[70px]">Pts</TableHead>
-          <TableHead className="py-2 px-3 text-center font-bold text-muted-foreground text-[10px] uppercase tracking-wider w-[40px]">W</TableHead>
-          <TableHead className="py-2 px-3 text-center font-bold text-muted-foreground text-[10px] uppercase tracking-wider w-[40px]">2nd</TableHead>
-          <TableHead className="py-2 px-3 text-center font-bold text-muted-foreground text-[10px] uppercase tracking-wider w-[40px]">L</TableHead>
-          <TableHead className="py-2 px-3 text-center font-bold text-muted-foreground text-[10px] uppercase tracking-wider w-[40px]">C</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {entries.map((entry, index) => (
-          <TableRow
-            key={entry.teamId}
-            className={cn(
-              "border-b border-border/50 transition-colors",
-              getRowStyle(entry.position)
-            )}
-          >
-            <TableCell className="py-2 px-3">
-              {getPositionBadge(entry.position)}
-            </TableCell>
-            <TableCell className="py-2 px-3">
-              <span className="font-semibold text-sm">{entry.teamName}</span>
-            </TableCell>
-            <TableCell className="py-2 px-3 text-right">
-              <span className="font-bold font-mono text-base text-primary">
-                {entry.totalPoints}
-              </span>
-            </TableCell>
-            <TableCell className="py-2 px-3 text-center">
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold font-mono text-green-600">
-                {entry.gwWins}
-              </span>
-            </TableCell>
-            <TableCell className="py-2 px-3 text-center">
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold font-mono text-blue-500">
-                {entry.secondFinishes}
-              </span>
-            </TableCell>
-            <TableCell className="py-2 px-3 text-center">
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold font-mono text-red-500">
-                {entry.lastFinishes}
-              </span>
-            </TableCell>
-            <TableCell className="py-2 px-3 text-center">
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold font-mono text-yellow-600">
-                {entry.captaincyWins}
-              </span>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/20 border-b border-border/50 hover:bg-muted/20">
+            <TableHead className="py-2 px-2 md:px-3 font-bold text-muted-foreground text-[10px] uppercase tracking-wider w-[60px] md:w-[70px]">Pos</TableHead>
+            <TableHead className="py-2 px-2 md:px-3 font-bold text-muted-foreground text-[10px] uppercase tracking-wider min-w-[100px]">Team</TableHead>
+            <TableHead className="py-2 px-2 md:px-3 text-right font-bold text-muted-foreground text-[10px] uppercase tracking-wider w-[60px] md:w-[70px]">Pts</TableHead>
+            <TableHead className="py-2 px-1.5 md:px-3 text-center font-bold text-muted-foreground text-[10px] uppercase tracking-wider w-[35px] md:w-[40px]">W</TableHead>
+            <TableHead className="py-2 px-1.5 md:px-3 text-center font-bold text-muted-foreground text-[10px] uppercase tracking-wider w-[35px] md:w-[40px]">2nd</TableHead>
+            <TableHead className="py-2 px-1.5 md:px-3 text-center font-bold text-muted-foreground text-[10px] uppercase tracking-wider w-[35px] md:w-[40px]">L</TableHead>
+            <TableHead className="py-2 px-1.5 md:px-3 text-center font-bold text-muted-foreground text-[10px] uppercase tracking-wider w-[35px] md:w-[40px]">C</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {entries.map((entry, index) => (
+            <TableRow
+              key={entry.teamId}
+              className={cn(
+                "border-b border-border/50 transition-colors",
+                getRowStyle(entry.position)
+              )}
+            >
+              <TableCell className="py-2 px-2 md:px-3">
+                {getPositionBadge(entry.position)}
+              </TableCell>
+              <TableCell className="py-2 px-2 md:px-3">
+                <span className="font-semibold text-xs md:text-sm truncate block max-w-[120px] md:max-w-none">{entry.teamName}</span>
+              </TableCell>
+              <TableCell className="py-2 px-2 md:px-3 text-right">
+                <span className="font-bold font-mono text-sm md:text-base text-primary">
+                  {entry.totalPoints}
+                </span>
+              </TableCell>
+              <TableCell className="py-2 px-1.5 md:px-3 text-center">
+                <span className="inline-flex items-center justify-center text-xs font-bold font-mono text-green-600">
+                  {entry.gwWins}
+                </span>
+              </TableCell>
+              <TableCell className="py-2 px-1.5 md:px-3 text-center">
+                <span className="inline-flex items-center justify-center text-xs font-bold font-mono text-blue-500">
+                  {entry.secondFinishes}
+                </span>
+              </TableCell>
+              <TableCell className="py-2 px-1.5 md:px-3 text-center">
+                <span className="inline-flex items-center justify-center text-xs font-bold font-mono text-red-500">
+                  {entry.lastFinishes}
+                </span>
+              </TableCell>
+              <TableCell className="py-2 px-1.5 md:px-3 text-center">
+                <span className="inline-flex items-center justify-center text-xs font-bold font-mono text-yellow-600">
+                  {entry.captaincyWins}
+                </span>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
