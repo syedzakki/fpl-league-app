@@ -56,3 +56,4 @@ export function FinancialTracker({ records }: FinancialTrackerProps) {
   )
 }
 
+

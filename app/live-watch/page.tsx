@@ -11,26 +11,32 @@ import {
     Users,
     Timer,
     ChevronRight,
+    Trophy,
+    TrendingUp,
+    TrendingDown,
 } from "lucide-react"
 import { GlobalRefresh } from "@/components/global-refresh"
-import { cn } from "@/lib/utils"
+import { cn, formatOrdinal } from "@/lib/utils"
 import { Match, Manager } from "@/components/live-watch/types"
-import { MatchCard } from "@/components/live-watch/match-card"
+import { EnhancedMatchCard } from "@/components/live-watch/enhanced-match-card"
 import { ManagerLiveCard } from "@/components/live-watch/manager-live-card"
-import { MatchStatsBreakdown } from "@/components/live-watch/match-stats-breakdown"
+import { EnhancedMatchModal } from "@/components/live-watch/enhanced-match-modal"
+import { TeamPlayerTiles } from "@/components/live-watch/team-player-tiles"
+import { LiveGWAnalytics } from "@/components/live-watch/live-gw-analytics"
 
 import { ProtectedRoute } from "@/components/auth/protected-route"
 
 import { useTeam } from "@/components/providers/team-provider"
 
 export default function LiveWatchPage() {
-    const { selectedTeamId } = useTeam()
+    const { selectedTeamId, teamName } = useTeam()
     const [data, setData] = useState<{ gameweek: number, matches: Match[], managers: Manager[] } | null>(null)
     const [myPlayers, setMyPlayers] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [refreshing, setRefreshing] = useState(false)
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
     const [error, setError] = useState<string | null>(null)
+    const [showLiveLeaderboard, setShowLiveLeaderboard] = useState(false)
 
     const fetchMyPlayers = async () => {
         if (!selectedTeamId) return
@@ -81,17 +87,67 @@ export default function LiveWatchPage() {
     const upcomingMatches = data?.matches.filter(m => !m.started) || []
     const finishedMatches = data?.matches.filter(m => m.finished).sort((a, b) => b.id - a.id) || []
 
+    // Calculate live leaderboard
+    const liveLeaderboard = data?.managers 
+        ? [...data.managers].sort((a, b) => b.totalLivePoints - a.totalLivePoints)
+        : []
+    
+    const myLiveRank = liveLeaderboard.findIndex(m => m.name === teamName) + 1
+    const myLivePoints = liveLeaderboard.find(m => m.name === teamName)?.totalLivePoints || 0
+    
+    // Fetch overall rank from leaderboard data
+    const [myOverallRank, setMyOverallRank] = useState<number | null>(null)
+    
+    useEffect(() => {
+        const fetchOverallRank = async () => {
+            if (!selectedTeamId) return
+            try {
+                const res = await fetch("/api/leaderboard")
+                const json = await res.json()
+                if (json.success) {
+                    const myTeam = json.data.leaderboard.find((t: any) => t.teamId === selectedTeamId)
+                    if (myTeam) {
+                        setMyOverallRank(myTeam.overallRank)
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch overall rank:", error)
+            }
+        }
+        fetchOverallRank()
+    }, [selectedTeamId])
+
     return (
         <ProtectedRoute>
             <div className="container mx-auto px-4 py-8 pb-24 md:pb-8">
                 <BlurFade delay={0}>
-                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-                        <div className="space-y-1">
+                    <div className="flex flex-col md:flex-row md:items-start justify-between mb-8 gap-4">
+                        <div className="space-y-3">
                             <div className="flex items-center gap-2">
                                 <Badge variant="destructive" className="animate-pulse px-2 py-0 h-5 text-[10px] font-bold uppercase">Live</Badge>
                                 <h1 className="text-3xl font-sports font-bold uppercase italic tracking-wide">Match Center</h1>
                             </div>
                             <p className="text-sm text-muted-foreground">Gameweek {data?.gameweek} • Real-time scores and bonus points</p>
+                            
+                            {/* Rank Display - Clean Layout */}
+                            {myLiveRank > 0 && (
+                                <div className="flex items-center gap-4">
+                                    <Card className="px-4 py-2 bg-card/60 border-border/50">
+                                        <p className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold mb-0.5">GW Rank</p>
+                                        <p className="text-2xl font-sports font-black text-primary">{formatOrdinal(myLiveRank)}</p>
+                                    </Card>
+                                    <Card className="px-4 py-2 bg-card/60 border-border/50">
+                                        <p className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold mb-0.5">Overall Rank</p>
+                                        <p className="text-2xl font-sports font-black text-foreground">
+                                            {myOverallRank ? `#${myOverallRank.toLocaleString()}` : "N/A"}
+                                        </p>
+                                    </Card>
+                                    <Card className="px-4 py-2 bg-card/60 border-border/50">
+                                        <p className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold mb-0.5">Live Points</p>
+                                        <p className="text-2xl font-mono font-black text-foreground">{myLivePoints}</p>
+                                    </Card>
+                                </div>
+                            )}
                         </div>
                         <div className="flex items-center gap-2">
                             <Button
@@ -102,7 +158,7 @@ export default function LiveWatchPage() {
                                 className="bg-background/50 backdrop-blur-sm"
                             >
                                 <RefreshCw className={cn("w-4 h-4 mr-2", refreshing && "animate-spin")} />
-                                {refreshing ? "Refreshing..." : "Fresh Sync"}
+                                {refreshing ? "Refreshing..." : "Sync"}
                             </Button>
                             <GlobalRefresh />
                         </div>
@@ -115,13 +171,41 @@ export default function LiveWatchPage() {
                             <TabsTrigger value="matches" className="gap-2">
                                 <Timer className="w-4 h-4" /> Matches
                             </TabsTrigger>
-                            <TabsTrigger value="managers" className="gap-2">
-                                <Users className="w-4 h-4" /> Managers
+                            <TabsTrigger value="teams" className="gap-2">
+                                <Users className="w-4 h-4" /> Team Watch
+                            </TabsTrigger>
+                            <TabsTrigger value="analytics" className="gap-2">
+                                <TrendingUp className="w-4 h-4" /> GW Analytics
                             </TabsTrigger>
                         </TabsList>
                     </div>
 
                     <TabsContent value="matches" className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        {/* Fixture Importance Legend */}
+                        <Card className="border-border/50 bg-card/40 backdrop-blur-md p-4">
+                            <div className="flex items-center justify-between flex-wrap gap-4">
+                                <h4 className="text-xs font-black uppercase tracking-wider text-muted-foreground">Fixture Importance</h4>
+                                <div className="flex items-center gap-4 flex-wrap">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 rounded border-2 border-primary/30 bg-primary/10" />
+                                        <span className="text-xs font-bold">3+ Players</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 rounded border-2 border-green-500/30 bg-green-500/10" />
+                                        <span className="text-xs font-bold">2 Players</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 rounded border-2 border-blue-500/30 bg-blue-500/10" />
+                                        <span className="text-xs font-bold">1 Player</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 rounded border-2 border-border/30 bg-muted/10" />
+                                        <span className="text-xs font-bold">No Players</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+
                         {/* Live Section */}
                         {liveMatches.length > 0 && (
                             <div className="space-y-6">
@@ -134,12 +218,14 @@ export default function LiveWatchPage() {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {liveMatches.map((m, i) => (
-                                        <MatchCard
+                                        <EnhancedMatchCard
                                             key={m.id}
                                             match={m}
                                             index={i}
                                             onClick={() => setSelectedMatch(m)}
                                             myPlayers={formattedMyPlayers}
+                                            managers={data?.managers}
+                                            myTeamId={selectedTeamId}
                                         />
                                     ))}
                                 </div>
@@ -178,12 +264,14 @@ export default function LiveWatchPage() {
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                             {matches.map((m, i) => (
-                                                <MatchCard
+                                                <EnhancedMatchCard
                                                     key={m.id}
                                                     match={m}
                                                     index={i + groupIndex * 10}
                                                     onClick={() => setSelectedMatch(m)}
                                                     myPlayers={formattedMyPlayers}
+                                                    managers={data?.managers}
+                                                    myTeamId={selectedTeamId}
                                                 />
                                             ))}
                                         </div>
@@ -203,12 +291,14 @@ export default function LiveWatchPage() {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-70">
                                     {finishedMatches.slice(0, 3).map((m, i) => (
-                                        <MatchCard
+                                        <EnhancedMatchCard
                                             key={m.id}
                                             match={m}
                                             index={i}
                                             onClick={() => setSelectedMatch(m)}
                                             myPlayers={formattedMyPlayers}
+                                            managers={data?.managers}
+                                            myTeamId={selectedTeamId}
                                         />
                                     ))}
                                 </div>
@@ -216,52 +306,33 @@ export default function LiveWatchPage() {
                         )}
                     </TabsContent>
 
-                    <TabsContent value="managers" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {data?.managers && [...data.managers].sort((a, b) => b.totalLivePoints - a.totalLivePoints).map((manager, i) => (
-                                <ManagerLiveCard key={manager.id} manager={manager} index={i} />
-                            ))}
-                        </div>
+                    <TabsContent value="teams" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        {data?.managers && (
+                            <TeamPlayerTiles 
+                                managers={data.managers} 
+                                myTeamId={selectedTeamId}
+                            />
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="analytics" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        {data?.managers && (
+                            <LiveGWAnalytics 
+                                managers={data.managers}
+                                myTeamId={selectedTeamId}
+                                gameweek={data.gameweek}
+                                myTeamName={teamName}
+                            />
+                        )}
                     </TabsContent>
                 </Tabs>
 
                 {/* Match Detail Dialog */}
                 {selectedMatch && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-300">
-                        <Card className="w-full max-w-2xl max-h-[80vh] overflow-y-auto relative shadow-2xl border-primary/20">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="absolute top-4 right-4 z-10"
-                                onClick={() => setSelectedMatch(null)}
-                            >
-                                <ChevronRight className="rotate-90" />
-                            </Button>
-                            <CardHeader className="text-center border-b border-border/50 bg-muted/5">
-                                <div className="flex items-center justify-center gap-6 mb-4">
-                                    <div className="text-center">
-                                        <div className="text-xs font-bold uppercase text-muted-foreground mb-1">Home</div>
-                                        <div className="text-xl font-sports font-bold tracking-tight">{selectedMatch.home}</div>
-                                    </div>
-                                    <div className="text-4xl font-sports font-black flex items-center gap-3">
-                                        <span>{selectedMatch.homeScore}</span>
-                                        <span className="text-muted-foreground/30 text-2xl">-</span>
-                                        <span>{selectedMatch.awayScore}</span>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="text-xs font-bold uppercase text-muted-foreground mb-1">Away</div>
-                                        <div className="text-xl font-sports font-bold tracking-tight">{selectedMatch.away}</div>
-                                    </div>
-                                </div>
-                                <div className="flex justify-center">
-                                    <Badge variant="secondary" className="font-mono">{selectedMatch.finished ? "FT" : `${selectedMatch.minutes}'`}</Badge>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="p-6 space-y-6">
-                                <MatchStatsBreakdown stats={selectedMatch.stats} />
-                            </CardContent>
-                        </Card>
-                    </div>
+                    <EnhancedMatchModal 
+                        match={selectedMatch} 
+                        onClose={() => setSelectedMatch(null)} 
+                    />
                 )}
             </div>
         </ProtectedRoute>

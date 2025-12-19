@@ -105,8 +105,12 @@ export function DeadlineCountdown({ deadline, gameweek, className }: DeadlineCou
     const isUrgent = timeLeft.totalSeconds > 0 && timeLeft.totalSeconds < 86400 // Less than 24 hours
 
     return (
-        <Card className={cn("p-6 flex flex-col items-center justify-center relative overflow-hidden bg-card/50 backdrop-blur-sm border-border/50 h-full", className)}>
+        <Card className={cn("p-6 flex flex-col items-center justify-center relative overflow-hidden bg-card/60 backdrop-blur-2xl border-border/50 h-full group", className)}>
             <BorderBeam size={150} duration={8} delay={0} colorFrom="#FFCF99" colorTo="#92140C" />
+            
+            <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-700 scale-150 -rotate-12 translate-x-4 -translate-y-4">
+                <Clock className="w-32 h-32" />
+            </div>
 
             <div className="flex flex-col items-center gap-2 mb-6 z-10">
                 <div className="flex items-center gap-2 text-muted-foreground uppercase tracking-widest text-[10px] font-bold">
@@ -126,17 +130,22 @@ export function DeadlineCountdown({ deadline, gameweek, className }: DeadlineCou
                 <TimeUnit value={timeLeft.hours} label="Hrs" isUrgent={isUrgent} />
                 <span className="text-2xl sm:text-4xl font-light text-muted-foreground/30 mb-2">:</span>
                 <TimeUnit value={timeLeft.minutes} label="Mins" isUrgent={isUrgent} />
+                <span className="text-2xl sm:text-4xl font-light text-muted-foreground/30 mb-2">:</span>
+                <TimeUnit value={timeLeft.seconds} label="Secs" isUrgent={isUrgent} />
             </div>
         </Card>
     )
 }
 
 function TimeUnit({ value, label, isUrgent }: { value: number; label: string; isUrgent: boolean }) {
+    const isSeconds = label === "Secs"
     return (
         <div className="flex flex-col items-center">
             <span className={cn(
-                "text-4xl sm:text-6xl font-black leading-none tracking-tighter tabular-nums transition-colors",
-                isUrgent ? "text-destructive drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]" : "text-foreground drop-shadow-xl"
+                "font-black leading-none tracking-tighter tabular-nums transition-colors",
+                isSeconds ? "text-2xl sm:text-4xl" : "text-4xl sm:text-6xl",
+                isUrgent ? "text-destructive drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]" : "text-foreground drop-shadow-xl",
+                isUrgent && isSeconds && "animate-pulse"
             )}>
                 {String(value).padStart(2, "0")}
             </span>

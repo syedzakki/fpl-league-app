@@ -13,6 +13,7 @@ export interface Match {
     stats: Record<string, { h: { player: string, value: number }[], a: { player: string, value: number }[] }>
     homeId: number
     awayId: number
+    xG?: { home: number; away: number }
 }
 
 export interface Manager {

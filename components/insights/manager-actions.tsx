@@ -35,10 +35,10 @@ export function ManagerActions({ myTeamPicks, recommendations, isLoading }: Mana
     if (isLoading) return <div className="h-48 animate-pulse bg-muted/20 rounded-xl border border-dashed border-border" />
 
     // Logic to generate Actions
-    // 1. Identify "Sell" candidates in my team (low form, injured)
+    // 1. Identify "Sell" candidates in my team - prioritize by value (most expensive underperformers)
     const sellCandidates = myTeamPicks
-        .filter(p => parseFloat(p.form) < 2 || p.status !== "a")
-        .sort((a, b) => parseFloat(a.form) - parseFloat(b.form))
+        .filter(p => parseFloat(p.form) < 3 || p.status !== "a")
+        .sort((a, b) => b.now_cost - a.now_cost) // Sort by cost descending (most expensive first)
         .slice(0, 3)
 
     // 2. Identify "Buy" targets from recommendations not in my team
@@ -63,15 +63,20 @@ export function ManagerActions({ myTeamPicks, recommendations, isLoading }: Mana
                     {sellCandidates.length > 0 ? (
                         sellCandidates.map((p, i) => (
                             <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-destructive/5 border border-destructive/10">
-                                <div>
-                                    <p className="font-bold text-sm tracking-tight">{p.name}</p>
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <p className="font-bold text-sm tracking-tight">{p.name}</p>
+                                        <Badge className="bg-orange-500/10 text-orange-500 border-orange-500/20 text-[9px] px-1.5 py-0 font-black">
+                                            £{(p.now_cost / 10).toFixed(1)}m
+                                        </Badge>
+                                    </div>
                                     <p className="text-[10px] text-muted-foreground uppercase font-bold">{p.teamName} • Form: {p.form}</p>
                                 </div>
                                 <Badge variant="outline" className={cn(
                                     "text-[9px] font-black uppercase tracking-widest",
                                     p.status !== "a" ? "border-red-500/50 text-red-500" : "border-orange-500/50 text-orange-500"
                                 )}>
-                                    {p.status !== "a" ? "Flagged" : "Underperforming"}
+                                    {p.status !== "a" ? "Flagged" : "Poor Form"}
                                 </Badge>
                             </div>
                         ))

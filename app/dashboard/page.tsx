@@ -9,6 +9,8 @@ import { BlurFade } from "@/components/ui/blur-fade"
 import { NextDeadlineWidget } from "@/components/dashboard/deadline-countdown"
 import { LiveRankCard } from "@/components/dashboard/live-rank-card"
 import { RivalWatch } from "@/components/dashboard/rival-watch"
+import { RankFeed } from "@/components/dashboard/rank-feed"
+import { TeamDependency } from "@/components/dashboard/team-dependency"
 import { RefreshCw, Trophy, TrendingUp, Info, ArrowRight, Users } from "lucide-react"
 import type { LeaderboardEntry } from "@/lib/types"
 import { LEAGUE_CONFIG } from "@/lib/constants"
@@ -35,6 +37,7 @@ export default function Dashboard() {
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
     const [completedGWs, setCompletedGWs] = useState(0)
     const [totalPot, setTotalPot] = useState(0)
+    const [myTeamPicks, setMyTeamPicks] = useState<any[]>([])
 
     const fetchLeaderboard = async () => {
         try {
@@ -100,9 +103,26 @@ export default function Dashboard() {
 
     useEffect(() => {
         fetchLeaderboard()
+        
+        // Fetch my team picks
+        const fetchMyTeam = async () => {
+            if (selectedTeamId) {
+                try {
+                    const res = await fetch(`/api/my-team?teamId=${selectedTeamId}`)
+                    const data = await res.json()
+                    if (data.success) {
+                        setMyTeamPicks(data.data.picks || [])
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch my team:", err)
+                }
+            }
+        }
+        
+        fetchMyTeam()
         const interval = setInterval(fetchLeaderboard, 5 * 60 * 1000)
         return () => clearInterval(interval)
-    }, [])
+    }, [selectedTeamId])
 
     // Derived Data
     const myTeam = leaderboard.find(l => l.teamName === teamName) || leaderboard[0]
@@ -129,6 +149,20 @@ export default function Dashboard() {
 
     const previousHistory = positionHistory.length > 1 ? positionHistory[positionHistory.length - 2] : null
     const myLastRank = previousHistory && myTeam ? previousHistory[myTeam.teamName] : undefined
+    
+    // Calculate previous overall rank from gameweek history
+    const myPreviousOverallRank = leaderboard.length > 0 && completedGWs > 0 
+        ? (() => {
+            // Find my team's previous gameweek data from the API response
+            const myTeamData = leaderboard.find(l => l.teamName === teamName)
+            if (myTeamData && (myTeamData as any).gameweeks) {
+                const gameweeks = (myTeamData as any).gameweeks
+                const prevGw = gameweeks.find((gw: any) => gw.gameweek === completedGWs)
+                return prevGw?.overallRank
+            }
+            return undefined
+        })()
+        : undefined
 
     return (
         <ProtectedRoute>
@@ -179,6 +213,7 @@ export default function Dashboard() {
                                 rank={myTeam?.position || 0}
                                 lastRank={myLastRank}
                                 overallRank={myTeam?.overallRank}
+                                previousOverallRank={myPreviousOverallRank}
                                 points={myTeam?.totalPoints || 0}
                                 isLoading={loading}
                             />
@@ -272,9 +307,23 @@ export default function Dashboard() {
                         </BlurFade>
                     </div>
 
+                    {/* Rank Feed & Team Dependency */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <BlurFade delay={0.6}>
+                            <RankFeed 
+                                myRank={myTeam?.overallRank || 0}
+                                myPoints={myTeam?.totalPoints || 0}
+                                totalManagers={10000000}
+                            />
+                        </BlurFade>
+                        <BlurFade delay={0.7}>
+                            <TeamDependency myTeamPicks={myTeamPicks} />
+                        </BlurFade>
+                    </div>
+
                     {/* Trend Chart */}
                     {!loading && positionHistory.length > 0 && (
-                        <BlurFade delay={0.6}>
+                        <BlurFade delay={0.8}>
                             <Card>
                                 <CardHeader className="flex flex-row items-center justify-between py-4 px-6 border-b border-border/50 bg-muted/5">
                                     <div className="flex items-center gap-3">

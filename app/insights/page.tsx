@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BlurFade } from "@/components/ui/blur-fade"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { LeagueComparisonChart } from "@/components/charts/league-comparison-chart"
-import { RefreshCw, Calendar, AlertTriangle, TrendingUp, Star, Users, Target, BarChart3, ArrowRightLeft, Lightbulb, Bot, Sparkles } from "lucide-react"
+import { RefreshCw, Calendar, AlertTriangle, TrendingUp, Star, Users, Target, BarChart3, ArrowRightLeft, Lightbulb, Bot, Sparkles, DollarSign } from "lucide-react"
 import { format } from "date-fns"
 import { GlobalRefresh } from "@/components/global-refresh"
 import { TopTransfersDisplay } from "@/components/top-transfers-display"
@@ -22,6 +22,9 @@ import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch"
 import { useTeam } from "@/components/providers/team-provider"
 import { ManagerActions } from "@/components/insights/manager-actions"
+import { PositionBasedReplacements } from "@/components/insights/position-based-replacements"
+import { FDRSummaryCards } from "@/components/insights/fdr-summary-cards"
+import { PriceChanges } from "@/components/insights/price-changes"
 
 
 interface Fixture {
@@ -110,6 +113,7 @@ export default function InsightsPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("transfers")
   const [aiMode, setAiMode] = useState(false)
+  const [fdrSortMode, setFdrSortMode] = useState<'default' | 'easiest' | 'hardest'>('default')
 
   const fetchData = async () => {
     try {
@@ -321,6 +325,10 @@ export default function InsightsPage() {
                       <AlertTriangle className="h-4 w-4" />
                       Medical Room
                     </TabsTrigger>
+                    <TabsTrigger value="prices" className="flex-1 md:flex-none items-center gap-2 px-6 h-11 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all font-bold uppercase tracking-widest text-[10px]">
+                      <DollarSign className="h-4 w-4" />
+                      Price Changes
+                    </TabsTrigger>
                   </TabsList>
                 </div>
 
@@ -343,10 +351,26 @@ export default function InsightsPage() {
                 </TabsContent>
 
                 <TabsContent value="schedule" className="space-y-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <Badge variant="outline" className="text-sm px-3 py-1 border-primary text-primary">
-                      Current: GW{currentGw}
-                    </Badge>
+                  {/* FDR Summary Cards */}
+                  {fixtures.length > 0 && teams.length > 0 && (
+                    <FDRSummaryCards fixtures={fixtures} teams={teams} currentGw={currentGw} />
+                  )}
+
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-3">
+                      <Badge variant="outline" className="text-sm px-3 py-1 border-primary text-primary">
+                        Current: GW{currentGw}
+                      </Badge>
+                      <select
+                        value={fdrSortMode}
+                        onChange={(e) => setFdrSortMode(e.target.value as typeof fdrSortMode)}
+                        className="px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-lg border border-border/50 bg-muted/20 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="default">Sort: A-Z</option>
+                        <option value="easiest">Sort: Easiest First</option>
+                        <option value="hardest">Sort: Hardest First</option>
+                      </select>
+                    </div>
                     <div className="flex gap-3 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <span className="w-3 h-3 rounded bg-[#00FF87]"></span> 1
@@ -374,16 +398,16 @@ export default function InsightsPage() {
                           Fixture Difficulty Rating (FDR)
                         </CardTitle>
                         <CardDescription>
-                          Next 10 gameweeks - Color-coded by difficulty
+                          Next 8 gameweeks - Color-coded by difficulty
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="p-0">
                         <Table>
                           <TableHeader>
                             <TableRow className="border-border/50 hover:bg-transparent bg-muted/30">
-                              <TableHead className="font-bold uppercase tracking-wider text-[10px] w-24 sticky left-0 bg-background z-10">Team</TableHead>
-                              <TableHead className="font-bold uppercase tracking-wider text-[10px] w-20 bg-background z-10">Rank</TableHead>
-                              {Object.keys(fixturesByGw).slice(0, 10).map(gw => (
+                              <TableHead className="font-bold uppercase tracking-wider text-[10px] w-32 sticky left-0 bg-background z-10">Team</TableHead>
+                              <TableHead className="font-bold uppercase tracking-wider text-[10px] w-20 bg-background z-10">Avg FDR</TableHead>
+                              {Object.keys(fixturesByGw).slice(0, 8).map(gw => (
                                 <TableHead key={gw} className="text-center font-bold uppercase tracking-wider text-[10px] min-w-[80px]">
                                   GW {gw}
                                 </TableHead>
@@ -391,8 +415,34 @@ export default function InsightsPage() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {teams.filter(t => t.id <= 20).sort((a, b) => a.name.localeCompare(b.name)).map(team => {
-                              const teamFixtures = Object.entries(fixturesByGw).slice(0, 10).map(([gw, fixtures]) => {
+                            {(() => {
+                              // Calculate average difficulty for each team
+                              const teamsWithAvgDifficulty = teams.filter(t => t.id <= 20).map(team => {
+                                const teamFixtures = Object.entries(fixturesByGw).slice(0, 8).map(([gw, fixtures]) => {
+                                  const fixture = fixtures.find(f => f.homeTeam === team.shortName || f.awayTeam === team.shortName)
+                                  if (!fixture) return 0
+                                  const isHome = fixture.homeTeam === team.shortName
+                                  return isHome ? fixture.homeDifficulty : fixture.awayDifficulty
+                                })
+                                const validDifficulties = teamFixtures.filter(d => d > 0)
+                                const avgDifficulty = validDifficulties.length > 0 
+                                  ? validDifficulties.reduce((sum, d) => sum + d, 0) / validDifficulties.length 
+                                  : 3
+                                return { ...team, avgDifficulty }
+                              })
+
+                              // Sort based on mode
+                              let sortedTeams = [...teamsWithAvgDifficulty]
+                              if (fdrSortMode === 'easiest') {
+                                sortedTeams.sort((a, b) => a.avgDifficulty - b.avgDifficulty)
+                              } else if (fdrSortMode === 'hardest') {
+                                sortedTeams.sort((a, b) => b.avgDifficulty - a.avgDifficulty)
+                              } else {
+                                sortedTeams.sort((a, b) => a.name.localeCompare(b.name))
+                              }
+
+                              return sortedTeams.map(team => {
+                                const teamFixtures = Object.entries(fixturesByGw).slice(0, 8).map(([gw, fixtures]) => {
                                 const fixture = fixtures.find(f => f.homeTeam === team.shortName || f.awayTeam === team.shortName)
                                 if (!fixture) return { gw, opponent: '-', difficulty: 0, isHome: false }
 
@@ -403,16 +453,42 @@ export default function InsightsPage() {
                                 return { gw, opponent, difficulty, isHome }
                               })
 
-                              return (
-                                <TableRow key={team.id} className="border-border/50 hover:bg-muted/20">
-                                  <TableCell className="font-medium sticky left-0 bg-background z-10">
-                                    {team.shortName}
-                                  </TableCell>
-                                  <TableCell className="text-center sticky left-24 bg-background z-10">
-                                    <Badge variant="outline" className="text-[10px] border-border/50 font-mono">
-                                      {team.id}
-                                    </Badge>
-                                  </TableCell>
+                                return (
+                                  <TableRow key={team.id} className={cn(
+                                    "border-border/50 hover:bg-muted/20 transition-colors",
+                                    team.avgDifficulty < 2.5 && "bg-green-500/5 hover:bg-green-500/10",
+                                    team.avgDifficulty > 3.5 && "bg-red-500/5 hover:bg-red-500/10"
+                                  )}>
+                                    <TableCell className={cn(
+                                      "font-medium sticky left-0 z-10",
+                                      team.avgDifficulty < 2.5 && "bg-green-500/5",
+                                      team.avgDifficulty > 3.5 && "bg-red-500/5",
+                                      team.avgDifficulty >= 2.5 && team.avgDifficulty <= 3.5 && "bg-background"
+                                    )}>
+                                      <div className="flex items-center gap-2">
+                                        <span>{team.shortName}</span>
+                                        {team.avgDifficulty < 2.5 && (
+                                          <Badge className="bg-green-500/10 text-green-500 border-green-500/20 text-[8px] px-1 py-0">Easy</Badge>
+                                        )}
+                                        {team.avgDifficulty > 3.5 && (
+                                          <Badge className="bg-red-500/10 text-red-500 border-red-500/20 text-[8px] px-1 py-0">Hard</Badge>
+                                        )}
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className={cn(
+                                      "text-center sticky left-32 z-10",
+                                      team.avgDifficulty < 2.5 && "bg-green-500/5",
+                                      team.avgDifficulty > 3.5 && "bg-red-500/5",
+                                      team.avgDifficulty >= 2.5 && team.avgDifficulty <= 3.5 && "bg-background"
+                                    )}>
+                                      <Badge variant="outline" className={cn(
+                                        "text-[10px] border-border/50 font-mono",
+                                        team.avgDifficulty < 2.5 && "text-green-500 border-green-500/30",
+                                        team.avgDifficulty > 3.5 && "text-red-500 border-red-500/30"
+                                      )}>
+                                        {team.avgDifficulty.toFixed(2)}
+                                      </Badge>
+                                    </TableCell>
                                   {teamFixtures.map(({ gw, opponent, difficulty, isHome }) => (
                                     <TableCell key={gw} className="p-1 text-center">
                                       {opponent !== '-' ? (
@@ -423,10 +499,11 @@ export default function InsightsPage() {
                                         <span className="text-muted-foreground text-xs">-</span>
                                       )}
                                     </TableCell>
-                                  ))}
-                                </TableRow>
-                              )
-                            })}
+                                    ))}
+                                  </TableRow>
+                                )
+                              })
+                            })()}
                           </TableBody>
                         </Table>
                       </CardContent>
@@ -509,6 +586,17 @@ export default function InsightsPage() {
                   {myTeamPicks.length > 0 && recommendations && (
                     <BlurFade delay={0.2}>
                       <ManagerActions
+                        myTeamPicks={myTeamPicks}
+                        recommendations={recommendations.recommendations}
+                        isLoading={loading}
+                      />
+                    </BlurFade>
+                  )}
+
+                  {/* Position-Based Replacements */}
+                  {myTeamPicks.length > 0 && recommendations && (
+                    <BlurFade delay={0.3}>
+                      <PositionBasedReplacements
                         myTeamPicks={myTeamPicks}
                         recommendations={recommendations.recommendations}
                         isLoading={loading}
@@ -736,6 +824,10 @@ export default function InsightsPage() {
                       </CardContent>
                     </Card>
                   )}
+                </TabsContent>
+
+                <TabsContent value="prices" className="space-y-6">
+                  <PriceChanges />
                 </TabsContent>
               </Tabs>
             </BlurFade>

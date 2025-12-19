@@ -77,9 +77,9 @@ export function TopTransfersDisplay() {
 
   if (!data) {
     return (
-      <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
+      <Card className="border-border/50 border-dashed">
         <CardContent className="p-8 text-center">
-          <p className="text-[#19297C] dark:text-[#DBC2CF]">Failed to load transfer data</p>
+          <p className="text-muted-foreground">Failed to load transfer data</p>
         </CardContent>
       </Card>
     )
@@ -87,58 +87,58 @@ export function TopTransfersDisplay() {
 
   const renderTransferTable = (players: TopTransfer[], type: "bought" | "sold") => {
     return (
-      <div className="rounded-md border border-[#DBC2CF] dark:border-[#19297C] overflow-hidden">
+      <div className="rounded-lg border border-border/50 overflow-hidden bg-card/40 backdrop-blur-sm">
         <Table>
           <TableHeader>
-            <TableRow className="bg-[#19297C] dark:bg-[#19297C] hover:bg-[#19297C]">
-              <TableHead className="text-white text-xs">Player</TableHead>
-              <TableHead className="text-white text-xs">Team</TableHead>
-              <TableHead className="text-white text-xs text-right">Cost</TableHead>
-              <TableHead className="text-white text-xs text-right">{type === "bought" ? "Transfers In" : "Transfers Out"}</TableHead>
-              <TableHead className="text-white text-xs text-center">Form</TableHead>
-              <TableHead className="text-white text-xs text-right">Pts</TableHead>
+            <TableRow className="bg-muted/30 hover:bg-muted/30 border-border/50">
+              <TableHead className="text-foreground font-bold uppercase tracking-wider text-[10px]">Player</TableHead>
+              <TableHead className="text-foreground font-bold uppercase tracking-wider text-[10px]">Team</TableHead>
+              <TableHead className="text-foreground font-bold uppercase tracking-wider text-[10px] text-right">Cost</TableHead>
+              <TableHead className="text-foreground font-bold uppercase tracking-wider text-[10px] text-right">{type === "bought" ? "Transfers In" : "Transfers Out"}</TableHead>
+              <TableHead className="text-foreground font-bold uppercase tracking-wider text-[10px] text-center">Form</TableHead>
+              <TableHead className="text-foreground font-bold uppercase tracking-wider text-[10px] text-right">Pts</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {players.map((player, index) => (
-              <TableRow key={player.id} className="border-[#DBC2CF] dark:border-[#19297C]">
-                <TableCell className="font-medium text-[#1A1F16] dark:text-[#FFFCF2]">
+              <TableRow key={player.id} className="border-border/50 hover:bg-muted/20 transition-colors">
+                <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs px-1.5 py-0 border-[#DBC2CF] dark:border-[#19297C]">
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-border/50 bg-muted/20">
                       {index + 1}
                     </Badge>
-                    <span>{player.name}</span>
+                    <span className="text-sm font-bold">{player.name}</span>
                     {player.costChange > 0 && (
-                      <Badge className="bg-green-500 text-white text-xs px-1.5 py-0 flex items-center gap-0.5">
+                      <Badge className="bg-green-500/10 text-green-500 border-green-500/20 text-[10px] px-1.5 py-0 flex items-center gap-0.5">
                         <ArrowUp className="h-2.5 w-2.5" />
                         {player.costChange}
                       </Badge>
                     )}
                     {player.costChange < 0 && (
-                      <Badge className="bg-red-500 text-white text-xs px-1.5 py-0 flex items-center gap-0.5">
+                      <Badge className="bg-red-500/10 text-red-500 border-red-500/20 text-[10px] px-1.5 py-0 flex items-center gap-0.5">
                         <ArrowDown className="h-2.5 w-2.5" />
                         {Math.abs(player.costChange)}
                       </Badge>
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="text-[#19297C] dark:text-[#DBC2CF] text-xs">
+                <TableCell className="text-muted-foreground text-xs">
                   {player.teamShort}
                 </TableCell>
-                <TableCell className="text-right font-mono text-[#028090] font-bold">
+                <TableCell className="text-right font-mono text-primary font-bold">
                   £{player.cost.toFixed(1)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Badge className={type === "bought" ? "bg-green-500 text-white" : "bg-red-500 text-white"}>
+                  <Badge className={type === "bought" ? "bg-green-500/10 text-green-500 border-green-500/20" : "bg-red-500/10 text-red-500 border-red-500/20"}>
                     {(type === "bought" ? player.transfersIn : player.transfersOut).toLocaleString()}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-center">
-                  <Badge variant="outline" className="border-[#DBC2CF] dark:border-[#19297C] text-[#19297C] dark:text-[#DBC2CF] text-xs">
+                  <Badge variant="outline" className="border-border/50 text-foreground text-[10px] bg-muted/20">
                     {player.form.toFixed(1)}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right font-mono text-[#1A1F16] dark:text-[#FFFCF2]">
+                <TableCell className="text-right font-mono font-bold">
                   {player.totalPoints}
                 </TableCell>
               </TableRow>
@@ -150,43 +150,44 @@ export function TopTransfersDisplay() {
   }
 
   return (
-    <Card className="bg-white dark:bg-[#1A1F16] border-[#DBC2CF] dark:border-[#19297C]">
-      <CardHeader className="border-b border-[#DBC2CF] dark:border-[#19297C]">
-        <CardTitle className="text-[#1A1F16] dark:text-[#FFFCF2]">
+    <Card className="border-border/50 bg-card/40 backdrop-blur-md">
+      <CardHeader className="border-b border-border/50 py-4">
+        <CardTitle className="flex items-center gap-2 text-base uppercase tracking-wider font-bold">
+          <ArrowUp className="h-5 w-5 text-primary" />
           Top Transfers by Position
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
         <Tabs value={activePosition} onValueChange={(value) => setActivePosition(value as typeof activePosition)}>
-          <TabsList className="grid w-full grid-cols-4 bg-[#DBC2CF]/30 dark:bg-[#19297C]/30 mb-4">
-            <TabsTrigger value="GK" className="data-[state=active]:bg-[#F26430] data-[state=active]:text-white">
+          <TabsList className="grid w-full grid-cols-4 bg-muted/10 p-1 rounded-xl border border-border/20 mb-4">
+            <TabsTrigger value="GK" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg font-bold uppercase tracking-wider text-[10px]">
               GK
             </TabsTrigger>
-            <TabsTrigger value="DEF" className="data-[state=active]:bg-[#F26430] data-[state=active]:text-white">
+            <TabsTrigger value="DEF" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg font-bold uppercase tracking-wider text-[10px]">
               DEF
             </TabsTrigger>
-            <TabsTrigger value="MID" className="data-[state=active]:bg-[#F26430] data-[state=active]:text-white">
+            <TabsTrigger value="MID" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg font-bold uppercase tracking-wider text-[10px]">
               MID
             </TabsTrigger>
-            <TabsTrigger value="FWD" className="data-[state=active]:bg-[#F26430] data-[state=active]:text-white">
+            <TabsTrigger value="FWD" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg font-bold uppercase tracking-wider text-[10px]">
               FWD
             </TabsTrigger>
           </TabsList>
 
           {(["GK", "DEF", "MID", "FWD"] as const).map((position) => (
-            <TabsContent key={position} value={position} className="space-y-4">
+            <TabsContent key={position} value={position} className="space-y-6">
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 px-1">
                   <TrendingUp className="h-4 w-4 text-green-500" />
-                  <h3 className="font-semibold text-[#1A1F16] dark:text-[#FFFCF2]">Most Bought</h3>
+                  <h3 className="font-bold uppercase tracking-wider text-sm">Most Bought</h3>
                 </div>
                 {renderTransferTable(data[position].mostBought, "bought")}
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 px-1">
                   <TrendingDown className="h-4 w-4 text-red-500" />
-                  <h3 className="font-semibold text-[#1A1F16] dark:text-[#FFFCF2]">Most Sold</h3>
+                  <h3 className="font-bold uppercase tracking-wider text-sm">Most Sold</h3>
                 </div>
                 {renderTransferTable(data[position].mostSold, "sold")}
               </div>

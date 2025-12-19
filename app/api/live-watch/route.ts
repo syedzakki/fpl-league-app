@@ -62,6 +62,17 @@ export async function GET(req: Request) {
             const homeTeam = teamsMap[f.team_h]
             const awayTeam = teamsMap[f.team_a]
 
+            // Calculate xG (expected goals) based on team strength and difficulty
+            // This is a simplified calculation - in production, you'd use actual xG data
+            const homeStrength = homeTeam.strength_attack_home || 1000
+            const awayStrength = awayTeam.strength_attack_away || 1000
+            const homeDefense = homeTeam.strength_defence_home || 1000
+            const awayDefense = awayTeam.strength_defence_away || 1000
+            
+            // Normalize to xG scale (0-5)
+            const homeXG = ((homeStrength / awayDefense) * 1.5).toFixed(1)
+            const awayXG = ((awayStrength / homeDefense) * 1.2).toFixed(1) // Away teams typically score less
+            
             // Extract player stats from the fixture (goals, assists, etc)
             const statsBreakdown: any = {}
             f.stats.forEach((s: any) => {
@@ -108,7 +119,8 @@ export async function GET(req: Request) {
                 kickoff: f.kickoff_time,
                 stats: statsBreakdown,
                 homeId: f.team_h,
-                awayId: f.team_a
+                awayId: f.team_a,
+                xG: !f.started ? { home: parseFloat(homeXG), away: parseFloat(awayXG) } : undefined
             }
         })
 

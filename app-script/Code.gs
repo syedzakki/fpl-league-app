@@ -1309,3 +1309,4 @@ function buildSummarySheet() {
   Logger.log('Summary sheet written (excluded team ' + skipId + ').');
 }
 
+
