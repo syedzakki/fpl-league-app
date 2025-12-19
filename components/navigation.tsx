@@ -24,6 +24,7 @@ import { useTeam } from "@/components/providers/team-provider"
 import { useRouter } from "next/navigation"
 
 const navItems = [
+  { name: "Live Watch", href: "/live-watch", icon: Activity },
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Leaderboard", href: "/leaderboard-fpl", icon: Trophy },
   { name: "Teams", href: "/teams", icon: Users },
@@ -124,7 +125,7 @@ export function Navigation() {
 
         {/* Bottom Nav */}
         <nav className="fixed bottom-0 left-0 right-0 z-40 h-16 border-t border-border bg-background flex items-center justify-around px-2 pb-safe">
-          {navItems.slice(0, 5).map((item) => {
+          {navItems.slice(0, 6).map((item) => {
             const isActive = pathname === item.href
             return (
               <Link
