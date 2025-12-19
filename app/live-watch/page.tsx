@@ -95,33 +95,44 @@ export default function LiveWatchPage() {
     const myLiveRank = liveLeaderboard.findIndex(m => m.name === teamName) + 1
     const myLivePoints = liveLeaderboard.find(m => m.name === teamName)?.totalLivePoints || 0
     
-    // Fetch overall rank from leaderboard data
+    // Fetch overall FPL stats
     const [myOverallRank, setMyOverallRank] = useState<number | null>(null)
+    const [myTotalPoints, setMyTotalPoints] = useState<number | null>(null)
+    const [myOverallGWRank, setMyOverallGWRank] = useState<number | null>(null)
     
     useEffect(() => {
-        const fetchOverallRank = async () => {
+        const fetchOverallStats = async () => {
             if (!selectedTeamId) return
             try {
-                const res = await fetch("/api/leaderboard")
-                const json = await res.json()
-                if (json.success) {
-                    const myTeam = json.data.leaderboard.find((t: any) => t.teamId === selectedTeamId)
+                // Fetch from leaderboard for overall rank and total points
+                const leaderboardRes = await fetch("/api/leaderboard")
+                const leaderboardJson = await leaderboardRes.json()
+                if (leaderboardJson.success) {
+                    const myTeam = leaderboardJson.data.leaderboard.find((t: any) => t.teamId === selectedTeamId)
                     if (myTeam) {
                         setMyOverallRank(myTeam.overallRank)
+                        setMyTotalPoints(myTeam.totalPoints)
                     }
                 }
+
+                // Fetch from FPL API for overall GW rank
+                const fplRes = await fetch(`https://fantasy.premierleague.com/api/entry/${selectedTeamId}/`)
+                const fplData = await fplRes.json()
+                if (fplData) {
+                    setMyOverallGWRank(fplData.summary_event_rank || null)
+                }
             } catch (error) {
-                console.error("Failed to fetch overall rank:", error)
+                console.error("Failed to fetch overall stats:", error)
             }
         }
-        fetchOverallRank()
+        fetchOverallStats()
     }, [selectedTeamId])
 
     return (
         <ProtectedRoute>
             <div className="container mx-auto px-4 py-8 pb-24 md:pb-8">
                 <BlurFade delay={0}>
-                    <div className="flex flex-col md:flex-row md:items-start justify-between mb-8 gap-4">
+                    <div className="flex flex-col md:flex-row md:items-start justify-between mb-8 gap-6">
                         <div className="space-y-3">
                             <div className="flex items-center gap-2">
                                 <Badge variant="destructive" className="animate-pulse px-2 py-0 h-5 text-[10px] font-bold uppercase">Live</Badge>
@@ -129,38 +140,65 @@ export default function LiveWatchPage() {
                             </div>
                             <p className="text-sm text-muted-foreground">Gameweek {data?.gameweek} • Real-time scores and bonus points</p>
                             
-                            {/* Rank Display - Clean Layout */}
+                            {/* Mini-League Ranks - Left Side */}
                             {myLiveRank > 0 && (
-                                <div className="flex items-center gap-4">
-                                    <Card className="px-4 py-2 bg-card/60 border-border/50">
-                                        <p className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold mb-0.5">GW Rank</p>
-                                        <p className="text-2xl font-sports font-black text-primary">{formatOrdinal(myLiveRank)}</p>
-                                    </Card>
-                                    <Card className="px-4 py-2 bg-card/60 border-border/50">
-                                        <p className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold mb-0.5">Overall Rank</p>
-                                        <p className="text-2xl font-sports font-black text-foreground">
-                                            {myOverallRank ? `#${myOverallRank.toLocaleString()}` : "N/A"}
-                                        </p>
-                                    </Card>
-                                    <Card className="px-4 py-2 bg-card/60 border-border/50">
-                                        <p className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold mb-0.5">Live Points</p>
-                                        <p className="text-2xl font-mono font-black text-foreground">{myLivePoints}</p>
-                                    </Card>
+                                <div>
+                                    <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mb-2">Mini-League Stats</p>
+                                    <div className="flex items-center gap-3">
+                                        <Card className="px-4 py-2.5 bg-primary/5 border-primary/20">
+                                            <p className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold mb-0.5">League GW Rank</p>
+                                            <p className="text-2xl font-sports font-black text-primary">{formatOrdinal(myLiveRank)}</p>
+                                        </Card>
+                                        <Card className="px-4 py-2.5 bg-card/60 border-border/50">
+                                            <p className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold mb-0.5">Live GW Points</p>
+                                            <p className="text-2xl font-mono font-black text-foreground">{myLivePoints}</p>
+                                        </Card>
+                                    </div>
                                 </div>
                             )}
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={fetchLiveStats}
-                                disabled={refreshing}
-                                className="bg-background/50 backdrop-blur-sm"
-                            >
-                                <RefreshCw className={cn("w-4 h-4 mr-2", refreshing && "animate-spin")} />
-                                {refreshing ? "Refreshing..." : "Sync"}
-                            </Button>
-                            <GlobalRefresh />
+
+                        {/* Overall FPL Stats - Right Side */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2 justify-end">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={fetchLiveStats}
+                                    disabled={refreshing}
+                                    className="bg-background/50 backdrop-blur-sm"
+                                >
+                                    <RefreshCw className={cn("w-4 h-4 mr-2", refreshing && "animate-spin")} />
+                                    {refreshing ? "Refreshing..." : "Sync"}
+                                </Button>
+                                <GlobalRefresh />
+                            </div>
+                            
+                            {myOverallRank && (
+                                <div>
+                                    <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mb-2 text-right">Overall FPL Stats</p>
+                                    <div className="flex items-center gap-3">
+                                        <Card className="px-4 py-2.5 bg-card/60 border-border/50">
+                                            <p className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold mb-0.5">Overall Rank</p>
+                                            <p className="text-2xl font-sports font-black text-foreground">
+                                                #{myOverallRank.toLocaleString()}
+                                            </p>
+                                        </Card>
+                                        <Card className="px-4 py-2.5 bg-card/60 border-border/50">
+                                            <p className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold mb-0.5">Overall GW Rank</p>
+                                            <p className="text-2xl font-sports font-black text-foreground">
+                                                {myOverallGWRank ? `#${myOverallGWRank.toLocaleString()}` : "N/A"}
+                                            </p>
+                                        </Card>
+                                        <Card className="px-4 py-2.5 bg-card/60 border-border/50">
+                                            <p className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold mb-0.5">Total Points</p>
+                                            <p className="text-2xl font-mono font-black text-foreground">
+                                                {myTotalPoints?.toLocaleString() || "N/A"}
+                                            </p>
+                                        </Card>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </BlurFade>
