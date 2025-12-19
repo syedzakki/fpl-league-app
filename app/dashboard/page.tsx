@@ -265,10 +265,15 @@ export default function Dashboard() {
                 {!loading && positionHistory.length > 0 && (
                     <BlurFade delay={0.6}>
                         <Card>
-                            <CardHeader>
-                                <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-                                    <TrendingUp className="h-4 w-4" /> Season Trends
-                                </CardTitle>
+                            <CardHeader className="flex flex-row items-center justify-between py-4 px-6 border-b border-border/50 bg-muted/5">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-primary/10">
+                                        <TrendingUp className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <CardTitle className="text-base font-bold uppercase italic tracking-tight">
+                                        Season Trends
+                                    </CardTitle>
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 <PositionHistoryChart data={positionHistory} players={players} />

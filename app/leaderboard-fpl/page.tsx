@@ -137,23 +137,25 @@ export default function FPLLeaderboardPage() {
           <BlurFade delay={0.1}>
             <Card className="overflow-hidden relative border-border/50">
               <ShineBorder className="absolute inset-0 w-full h-full pointer-events-none opacity-20" shineColor={["#A07CFE", "#FE8FB5", "#FFBE7B"]} duration={14} />
-              <CardHeader className="py-4 px-6 border-b border-border/50 flex md:flex-row items-center justify-between gap-4">
-                <div className="flex items-center space-x-3">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <CardHeader className="flex flex-row items-center justify-between py-4 px-6 border-b border-border/50 bg-muted/5">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
                     <Trophy className="h-5 w-5 text-primary" />
                   </div>
-                  <div>
-                    <CardTitle className="text-lg">League Standings</CardTitle>
-                    <CardDescription>Live tracking direct from FPL API</CardDescription>
+                  <div className="flex flex-col">
+                    <CardTitle className="text-base font-bold uppercase italic tracking-tight">
+                      League Standings
+                    </CardTitle>
+                    <CardDescription className="text-xs opacity-70">Live tracking direct from FPL API</CardDescription>
                   </div>
                 </div>
                 <Button
                   size="sm"
                   variant={showNoHits ? "default" : "outline"}
                   onClick={() => setShowNoHits(!showNoHits)}
-                  className="text-xs"
+                  className="text-[10px] font-bold uppercase tracking-widest h-8"
                 >
-                  {showNoHits ? "Hide" : "Show"} "No Hits" Calc
+                  {showNoHits ? "Hide" : "Show"} Hits Calc
                 </Button>
               </CardHeader>
               <CardContent className="p-0">

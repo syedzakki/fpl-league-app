@@ -27,11 +27,15 @@ export function RivalWatch({ rivals }: RivalWatchProps) {
 
     return (
         <Card className="h-full border-border/50">
-            <CardHeader className="pb-3 border-b border-border/50 px-4 py-3">
-                <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-                    <Zap className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
-                    Rival Watch
-                </CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between py-4 px-6 border-b border-border/50 bg-muted/5">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                        <Zap className="h-5 w-5 text-primary" />
+                    </div>
+                    <CardTitle className="text-base font-bold uppercase italic tracking-tight">
+                        Rival Watch
+                    </CardTitle>
+                </div>
             </CardHeader>
             <CardContent className="p-0">
                 <div className="divide-y divide-border/50">

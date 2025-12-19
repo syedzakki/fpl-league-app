@@ -80,7 +80,7 @@ export default function LandingPage() {
       <BlurFade delay={0.2}>
         <div className="relative group">
           <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-          <Card className="w-full max-w-2xl border-border/50 bg-card/80 backdrop-blur-xl relative z-10 overflow-hidden shadow-2xl">
+          <Card className="w-full max-w-4xl border-border/50 bg-card/80 backdrop-blur-xl relative z-10 overflow-hidden shadow-2xl">
             <ShineBorder className="absolute inset-0 w-full h-full pointer-events-none opacity-50" shineColor={["#FFCF99", "#92140C"]} duration={10} />
             <CardHeader className="text-center border-b border-border/50 pb-6">
               <CardTitle className="uppercase tracking-widest text-sm font-bold text-muted-foreground">Identity Verification</CardTitle>
