@@ -385,6 +385,8 @@ function MatchStatsBreakdown({ stats }: { stats: Match['stats'] }) {
         { id: 'red_cards', label: 'Red Cards', icon: '🟥' },
         { id: 'saves', label: 'Saves', icon: '🧤' },
         { id: 'bonus', label: 'Bonus Points', icon: '💎' },
+        { id: 'bps', label: 'Bonus Point System (BPS)', icon: '📈' },
+        { id: 'defensive_contribution', label: 'Defcon Points', icon: '🛡️' },
     ]
 
     return (
