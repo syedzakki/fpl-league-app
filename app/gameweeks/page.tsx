@@ -152,7 +152,7 @@ export default function GameweeksPage() {
   }, [])
 
   const currentGameweek = gameweeks.find(gw => gw.gameweek === selectedGW)
-  const currentFixtures = fixtures.filter(f => f.id === selectedGW)
+  const currentFixtures = fixtures.filter(f => f.gameweek === selectedGW)
 
   const calculateWinners = (gw: GameweekData) => {
     const sortedByPoints = [...gw.teams].sort((a, b) => b.points - a.points)
@@ -366,7 +366,7 @@ export default function GameweeksPage() {
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {liveWatchData?.managers
+                          {liveWatchData?.managers && [...liveWatchData.managers]
                             .sort((a, b) => b.totalLivePoints - a.totalLivePoints)
                             .map((manager, i) => (
                               <div key={manager.id} className="h-full">
@@ -390,7 +390,7 @@ export default function GameweeksPage() {
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 gap-4">
-                          {liveWatchData?.matches.map((m, i) => (
+                          {liveWatchData?.matches && liveWatchData.matches.map((m, i) => (
                             <MatchCard key={m.id} match={m} index={i} onClick={() => setSelectedMatch(m)} />
                           ))}
                         </div>

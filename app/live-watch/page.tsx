@@ -146,7 +146,7 @@ export default function LiveWatchPage() {
 
                 <TabsContent value="managers" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {data?.managers.sort((a, b) => b.totalLivePoints - a.totalLivePoints).map((manager, i) => (
+                        {data?.managers && [...data.managers].sort((a, b) => b.totalLivePoints - a.totalLivePoints).map((manager, i) => (
                             <ManagerLiveCard key={manager.id} manager={manager} index={i} />
                         ))}
                     </div>
