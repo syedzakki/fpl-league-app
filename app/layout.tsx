@@ -5,6 +5,8 @@ import { Navigation } from "@/components/navigation"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TeamProvider } from "@/components/providers/team-provider"
 
+import { ErrorBoundary } from "@/components/error-boundary"
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -41,19 +43,21 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} ${oswald.variable} font-sans antialiased`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          <TeamProvider>
-            <Navigation />
-            <main className="relative min-h-screen md:pl-64 pt-14 pb-16 md:pb-0 md:pt-0 bg-background transition-all duration-300">
-              {children}
-            </main>
-          </TeamProvider>
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            <TeamProvider>
+              <Navigation />
+              <main className="relative min-h-screen md:pl-64 pt-14 pb-16 md:pb-0 md:pt-0 bg-background transition-all duration-300">
+                {children}
+              </main>
+            </TeamProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )

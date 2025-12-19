@@ -23,35 +23,48 @@ export function TeamProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         console.log("TeamProvider Mount")
-        // Load from local storage on mount
-        const storedTeamId = localStorage.getItem("fpl_selected_team_id")
-        const storedTeamName = localStorage.getItem("fpl_selected_team_name")
-        console.log("TeamProvider Storage:", { storedTeamId, storedTeamName })
+        // Load from cookies on mount
+        const getCookie = (name: string) => {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop()?.split(';').shift();
+            return null;
+        }
+
+        const storedTeamId = getCookie("fpl_selected_team_id")
+        const storedTeamName = getCookie("fpl_selected_team_name")
+        console.log("TeamProvider Cookies:", { storedTeamId, storedTeamName })
 
         if (storedTeamId) setSelectedTeamId(storedTeamId)
         if (storedTeamName) setTeamName(storedTeamName)
         setIsLoading(false)
     }, [])
 
+    const setCookie = (name: string, value: string | null) => {
+        if (value) {
+            document.cookie = `${name}=${value}; path=/; max-age=31536000; SameSite=Lax`;
+        } else {
+            document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
+        }
+    }
+
     // Simplistic handlers for individual setbacks - keeping these for backward compat but relying on setTeam for login
     const setTeamIdOnly = (id: string | null) => {
         setSelectedTeamId(id)
-        if (id) localStorage.setItem("fpl_selected_team_id", id)
-        else localStorage.removeItem("fpl_selected_team_id")
+        setCookie("fpl_selected_team_id", id)
     }
 
     const setTeamNameOnly = (name: string | null) => {
         setTeamName(name)
-        if (name) localStorage.setItem("fpl_selected_team_name", name)
-        else localStorage.removeItem("fpl_selected_team_name")
+        setCookie("fpl_selected_team_name", name)
     }
 
     const handleSetTeam = (id: string, name: string) => {
         console.log("Atomic setTeam called:", { id, name })
         setSelectedTeamId(id)
         setTeamName(name)
-        localStorage.setItem("fpl_selected_team_id", id)
-        localStorage.setItem("fpl_selected_team_name", name)
+        setCookie("fpl_selected_team_id", id)
+        setCookie("fpl_selected_team_name", name)
     }
 
     return (

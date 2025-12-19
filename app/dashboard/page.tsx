@@ -18,13 +18,15 @@ import { useTeam } from "@/components/providers/team-provider"
 import { useRouter } from "next/navigation"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
+import { ProtectedRoute } from "@/components/auth/protected-route"
+
 interface PositionData {
     gameweek: number
     [playerName: string]: number
 }
 
 export default function Dashboard() {
-    const { selectedTeamId, teamName, isLoading: authLoading } = useTeam()
+    const { selectedTeamId, teamName } = useTeam()
     const router = useRouter()
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
     const [positionHistory, setPositionHistory] = useState<PositionData[]>([])
@@ -33,21 +35,6 @@ export default function Dashboard() {
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
     const [completedGWs, setCompletedGWs] = useState(0)
     const [totalPot, setTotalPot] = useState(0)
-
-    useEffect(() => {
-        console.log("Dashboard Auth Check:", { authLoading, selectedTeamId })
-        if (!authLoading) {
-            if (!selectedTeamId) {
-                console.log("Redirecting to / from Dashboard because no team selected")
-                router.push("/")
-            } else {
-                console.log("Authenticated on Dashboard as:", selectedTeamId)
-            }
-        }
-    }, [authLoading, selectedTeamId, router])
-
-    if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-background"><RefreshCw className="animate-spin h-8 w-8 text-primary" /></div>
-    if (!selectedTeamId) return null
 
     const fetchLeaderboard = async () => {
         try {
@@ -133,156 +120,155 @@ export default function Dashboard() {
     const previousHistory = positionHistory.length > 1 ? positionHistory[positionHistory.length - 2] : null
     const myLastRank = previousHistory && myTeam ? previousHistory[myTeam.teamName] : undefined
 
-    // Safety check to prevent rendering if we're redirecting
-    if (!selectedTeamId && !authLoading) return null
-
     return (
-        <div className="min-h-screen bg-background pb-20 md:pb-6">
-            <div className="container mx-auto px-4 py-6 space-y-6">
+        <ProtectedRoute>
+            <div className="min-h-screen bg-background pb-20 md:pb-6">
+                <div className="container mx-auto px-4 py-6 space-y-6">
 
-                {/* Header */}
-                <BlurFade delay={0}>
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-3xl md:text-5xl font-sports font-bold uppercase italic tracking-wide text-foreground">
-                                Gameweek <span className="text-primary">{completedGWs + 1}</span>
-                            </h1>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider">
-                                    <span className="relative flex h-2 w-2">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                    {/* Header */}
+                    <BlurFade delay={0}>
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h1 className="text-3xl md:text-5xl font-sports font-bold uppercase italic tracking-wide text-foreground">
+                                    Gameweek <span className="text-primary">{completedGWs + 1}</span>
+                                </h1>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                    <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider">
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                                        </span>
+                                        Live Updates
                                     </span>
-                                    Live Updates
-                                </span>
-                                <span>Last synced {lastUpdated?.toLocaleTimeString()}</span>
+                                    <span>Last synced {lastUpdated?.toLocaleTimeString()}</span>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="flex gap-2">
-                            <div className="text-right hidden md:block mr-4">
-                                <p className="text-xs text-muted-foreground uppercase">Logged in as</p>
-                                <p className="font-bold text-primary">{teamName}</p>
+                            <div className="flex gap-2">
+                                <div className="text-right hidden md:block mr-4">
+                                    <p className="text-xs text-muted-foreground uppercase">Logged in as</p>
+                                    <p className="font-bold text-primary">{teamName}</p>
+                                </div>
+                                <Button variant="outline" size="sm" onClick={fetchLeaderboard} disabled={loading} className="gap-2">
+                                    <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                                    Sync
+                                </Button>
+                                <GlobalRefresh />
                             </div>
-                            <Button variant="outline" size="sm" onClick={fetchLeaderboard} disabled={loading} className="gap-2">
-                                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                                Sync
-                            </Button>
-                            <GlobalRefresh />
                         </div>
+                    </BlurFade>
+
+                    {/* Hero Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
+                        <BlurFade delay={0.1} className="md:col-span-5 lg:col-span-4">
+                            <NextDeadlineWidget />
+                        </BlurFade>
+
+                        <BlurFade delay={0.2} className="md:col-span-4 lg:col-span-4">
+                            <LiveRankCard
+                                rank={myTeam?.position || 0}
+                                lastRank={myLastRank}
+                                points={myTeam?.totalPoints || 0}
+                                isLoading={loading}
+                            />
+                        </BlurFade>
+
+                        <BlurFade delay={0.3} className="md:col-span-3 lg:col-span-4 grid grid-cols-2 md:grid-cols-1 md:grid-rows-2 gap-3 md:gap-4">
+                            <Card className="flex flex-col justify-center px-4 py-3 md:px-6 bg-primary/5 border-primary/20 relative overflow-hidden">
+                                <div className="absolute top-2 right-2">
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <Info className="w-4 h-4 text-primary/50" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Total pot value based on buy-ins and weekly contributions</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </div>
+                                <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Total Pot</div>
+                                <div className="text-2xl md:text-3xl font-mono font-bold text-primary">₹{totalPot}</div>
+                            </Card>
+                            <Card className="flex flex-col justify-center px-4 py-3 md:px-6 bg-secondary/30 relative">
+                                <div className="absolute top-2 right-2">
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <Info className="w-4 h-4 text-muted-foreground/50" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Number of active managers in the league</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </div>
+                                <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Active Players</div>
+                                <div className="text-2xl md:text-3xl font-mono font-bold">{leaderboard.length}</div>
+                            </Card>
+                        </BlurFade>
                     </div>
-                </BlurFade>
 
-                {/* Hero Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
-                    <BlurFade delay={0.1} className="md:col-span-5 lg:col-span-4">
-                        <NextDeadlineWidget />
-                    </BlurFade>
+                    {/* Secondary Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <BlurFade delay={0.4} className="lg:col-span-1">
+                            <RivalWatch rivals={rivals} />
+                        </BlurFade>
 
-                    <BlurFade delay={0.2} className="md:col-span-4 lg:col-span-4">
-                        <LiveRankCard
-                            rank={myTeam?.position || 0}
-                            lastRank={myLastRank}
-                            points={myTeam?.totalPoints || 0}
-                            isLoading={loading}
-                        />
-                    </BlurFade>
-
-                    <BlurFade delay={0.3} className="md:col-span-3 lg:col-span-4 grid grid-cols-2 md:grid-cols-1 md:grid-rows-2 gap-3 md:gap-4">
-                        <Card className="flex flex-col justify-center px-4 py-3 md:px-6 bg-primary/5 border-primary/20 relative overflow-hidden">
-                            <div className="absolute top-2 right-2">
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger>
-                                            <Info className="w-4 h-4 text-primary/50" />
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Total pot value based on buy-ins and weekly contributions</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
-                            <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Total Pot</div>
-                            <div className="text-2xl md:text-3xl font-mono font-bold text-primary">₹{totalPot}</div>
-                        </Card>
-                        <Card className="flex flex-col justify-center px-4 py-3 md:px-6 bg-secondary/30 relative">
-                            <div className="absolute top-2 right-2">
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger>
-                                            <Info className="w-4 h-4 text-muted-foreground/50" />
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Number of active managers in the league</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
-                            <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Active Players</div>
-                            <div className="text-2xl md:text-3xl font-mono font-bold">{leaderboard.length}</div>
-                        </Card>
-                    </BlurFade>
-                </div>
-
-                {/* Secondary Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <BlurFade delay={0.4} className="lg:col-span-1">
-                        <RivalWatch rivals={rivals} />
-                    </BlurFade>
-
-                    <BlurFade delay={0.5} className="lg:col-span-2">
-                        <Card className="h-full flex flex-col">
-                            <CardHeader className="flex flex-row items-center justify-between py-4 px-6 border-b border-border/50 bg-muted/5">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-primary/10">
-                                        <Trophy className="h-5 w-5 text-primary" />
+                        <BlurFade delay={0.5} className="lg:col-span-2">
+                            <Card className="h-full flex flex-col">
+                                <CardHeader className="flex flex-row items-center justify-between py-4 px-6 border-b border-border/50 bg-muted/5">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-primary/10">
+                                            <Trophy className="h-5 w-5 text-primary" />
+                                        </div>
+                                        <CardTitle className="text-base font-bold uppercase italic tracking-tight">
+                                            Live Leaderboard
+                                        </CardTitle>
                                     </div>
-                                    <CardTitle className="text-base font-bold uppercase italic tracking-tight">
-                                        Live Leaderboard
-                                    </CardTitle>
-                                </div>
-                                <Link
-                                    href="/leaderboard-fpl"
-                                    className="text-xs text-primary hover:text-primary/80 transition-colors font-bold uppercase tracking-widest flex items-center gap-1 group"
-                                >
-                                    Detailed View
-                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                </Link>
-                            </CardHeader>
-                            <CardContent className="p-0 flex-1">
-                                {loading ? (
-                                    <div className="p-8 flex justify-center"><RefreshCw className="animate-spin text-muted-foreground" /></div>
-                                ) : (
-                                    // Show ALL teams, no slice
-                                    <LeaderboardTable entries={leaderboard} />
-                                )}
-                            </CardContent>
-                        </Card>
-                    </BlurFade>
-                </div>
+                                    <Link
+                                        href="/leaderboard-fpl"
+                                        className="text-xs text-primary hover:text-primary/80 transition-colors font-bold uppercase tracking-widest flex items-center gap-1 group"
+                                    >
+                                        Detailed View
+                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </Link>
+                                </CardHeader>
+                                <CardContent className="p-0 flex-1">
+                                    {loading ? (
+                                        <div className="p-8 flex justify-center"><RefreshCw className="animate-spin text-muted-foreground" /></div>
+                                    ) : (
+                                        // Show ALL teams, no slice
+                                        <LeaderboardTable entries={leaderboard} />
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </BlurFade>
+                    </div>
 
-                {/* Trend Chart */}
-                {!loading && positionHistory.length > 0 && (
-                    <BlurFade delay={0.6}>
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between py-4 px-6 border-b border-border/50 bg-muted/5">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-primary/10">
-                                        <TrendingUp className="h-5 w-5 text-primary" />
+                    {/* Trend Chart */}
+                    {!loading && positionHistory.length > 0 && (
+                        <BlurFade delay={0.6}>
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between py-4 px-6 border-b border-border/50 bg-muted/5">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-primary/10">
+                                            <TrendingUp className="h-5 w-5 text-primary" />
+                                        </div>
+                                        <CardTitle className="text-base font-bold uppercase italic tracking-tight">
+                                            Season Trends
+                                        </CardTitle>
                                     </div>
-                                    <CardTitle className="text-base font-bold uppercase italic tracking-tight">
-                                        Season Trends
-                                    </CardTitle>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <PositionHistoryChart data={positionHistory} players={players} />
-                            </CardContent>
-                        </Card>
-                    </BlurFade>
-                )}
+                                </CardHeader>
+                                <CardContent>
+                                    <PositionHistoryChart data={positionHistory} players={players} />
+                                </CardContent>
+                            </Card>
+                        </BlurFade>
+                    )}
 
+                </div>
             </div>
-        </div>
+        </ProtectedRoute>
     )
 }

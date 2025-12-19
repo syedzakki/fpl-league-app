@@ -30,6 +30,8 @@ interface FPLLeaderboardEntry {
   }>
 }
 
+import { ProtectedRoute } from "@/components/auth/protected-route"
+
 export default function FPLLeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState<FPLLeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -105,176 +107,178 @@ export default function FPLLeaderboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-6">
-      <div className="container mx-auto px-4 py-8">
-        <BlurFade delay={0}>
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-            <div>
-              <h1 className="text-3xl font-sports font-bold uppercase italic tracking-wide">FPL Leaderboard</h1>
-              <p className="text-sm text-muted-foreground mt-1">Direct API Feed • Includes Hits Analysis</p>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={fetchLeaderboard} disabled={loading} variant="outline" size="sm" className="gap-2">
-                <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
-                Sync
-              </Button>
-              <GlobalRefresh />
-            </div>
-          </div>
-        </BlurFade>
-
-        {loading ? (
-          <LoadingSpinner text="Checking live scores..." />
-        ) : error ? (
-          <Card className="p-8 text-center border-destructive/50 bg-destructive/5">
-            <div className="text-destructive mb-3 flex flex-col items-center">
-              <AlertCircle className="h-8 w-8 mb-2" />
-              <p>{error}</p>
-            </div>
-            <Button onClick={fetchLeaderboard} variant="destructive">Retry</Button>
-          </Card>
-        ) : (
-          <BlurFade delay={0.1}>
-            <Card className="overflow-hidden relative border-border/50">
-              <ShineBorder className="absolute inset-0 w-full h-full pointer-events-none opacity-20" shineColor={["#A07CFE", "#FE8FB5", "#FFBE7B"]} duration={14} />
-              <CardHeader className="flex flex-row items-center justify-between py-4 px-6 border-b border-border/50 bg-muted/5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Trophy className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="flex flex-col">
-                    <CardTitle className="text-base font-bold uppercase italic tracking-tight">
-                      League Standings
-                    </CardTitle>
-                    <CardDescription className="text-xs opacity-70">Live tracking direct from FPL API</CardDescription>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  variant={showNoHits ? "default" : "outline"}
-                  onClick={() => setShowNoHits(!showNoHits)}
-                  className="text-[10px] font-bold uppercase tracking-widest h-8"
-                >
-                  {showNoHits ? "Hide" : "Show"} Hits Calc
+    <ProtectedRoute>
+      <div className="min-h-screen bg-background pb-20 md:pb-6">
+        <div className="container mx-auto px-4 py-8">
+          <BlurFade delay={0}>
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+              <div>
+                <h1 className="text-3xl font-sports font-bold uppercase italic tracking-wide">FPL Leaderboard</h1>
+                <p className="text-sm text-muted-foreground mt-1">Direct API Feed • Includes Hits Analysis</p>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={fetchLeaderboard} disabled={loading} variant="outline" size="sm" className="gap-2">
+                  <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+                  Sync
                 </Button>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent border-border/50 bg-muted/30">
-                      <TableHead className="w-16 font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Pos</TableHead>
-                      <TableHead className="font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Manager</TableHead>
-                      {showNoHits && (
-                        <TableHead className="text-right cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort("noHits")}>
+                <GlobalRefresh />
+              </div>
+            </div>
+          </BlurFade>
+
+          {loading ? (
+            <LoadingSpinner text="Checking live scores..." />
+          ) : error ? (
+            <Card className="p-8 text-center border-destructive/50 bg-destructive/5">
+              <div className="text-destructive mb-3 flex flex-col items-center">
+                <AlertCircle className="h-8 w-8 mb-2" />
+                <p>{error}</p>
+              </div>
+              <Button onClick={fetchLeaderboard} variant="destructive">Retry</Button>
+            </Card>
+          ) : (
+            <BlurFade delay={0.1}>
+              <Card className="overflow-hidden relative border-border/50">
+                <ShineBorder className="absolute inset-0 w-full h-full pointer-events-none opacity-20" shineColor={["#A07CFE", "#FE8FB5", "#FFBE7B"]} duration={14} />
+                <CardHeader className="flex flex-row items-center justify-between py-4 px-6 border-b border-border/50 bg-muted/5">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <Trophy className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex flex-col">
+                      <CardTitle className="text-base font-bold uppercase italic tracking-tight">
+                        League Standings
+                      </CardTitle>
+                      <CardDescription className="text-xs opacity-70">Live tracking direct from FPL API</CardDescription>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={showNoHits ? "default" : "outline"}
+                    onClick={() => setShowNoHits(!showNoHits)}
+                    className="text-[10px] font-bold uppercase tracking-widest h-8"
+                  >
+                    {showNoHits ? "Hide" : "Show"} Hits Calc
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent border-border/50 bg-muted/30">
+                        <TableHead className="w-16 font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Pos</TableHead>
+                        <TableHead className="font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Manager</TableHead>
+                        {showNoHits && (
+                          <TableHead className="text-right cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort("noHits")}>
+                            <div className="flex items-center justify-end gap-1 font-bold uppercase text-[10px] tracking-widest">
+                              No Hits {getSortIcon("noHits")}
+                            </div>
+                          </TableHead>
+                        )}
+                        <TableHead className="text-right cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort("fpl")}>
                           <div className="flex items-center justify-end gap-1 font-bold uppercase text-[10px] tracking-widest">
-                            No Hits {getSortIcon("noHits")}
+                            Total {getSortIcon("fpl")}
                           </div>
                         </TableHead>
-                      )}
-                      <TableHead className="text-right cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort("fpl")}>
-                        <div className="flex items-center justify-end gap-1 font-bold uppercase text-[10px] tracking-widest">
-                          Total {getSortIcon("fpl")}
-                        </div>
-                      </TableHead>
-                      <TableHead className="text-center cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort("hits")}>
-                        <div className="flex items-center justify-center gap-1 font-bold uppercase text-[10px] tracking-widest">
-                          Hits {getSortIcon("hits")}
-                        </div>
-                      </TableHead>
-                      <TableHead className="text-right cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort("hitCost")}>
-                        <div className="flex items-center justify-end gap-1 font-bold uppercase text-[10px] tracking-widest">
-                          Cost {getSortIcon("hitCost")}
-                        </div>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sortedLeaderboard.map((entry, index) => (
-                      <TableRow key={entry.teamId} className="border-border/50 transition-colors hover:bg-muted/30">
-                        <TableCell className="font-mono">{getPositionBadge(index + 1)}</TableCell>
-                        <TableCell>
-                          <button onClick={() => handleTeamClick(entry)} className="font-bold hover:text-primary transition-colors flex items-center gap-2 group text-left">
-                            {entry.userName}
-                            <ArrowRightLeft className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
-                          </button>
-                        </TableCell>
-                        {showNoHits && (
-                          <TableCell className="text-right font-mono font-medium text-muted-foreground">
-                            {entry.totalPointsNoHits}
-                          </TableCell>
-                        )}
-                        <TableCell className="text-right font-mono font-bold text-lg text-primary">
-                          {entry.totalPointsFPL}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {entry.totalHits > 0 ? <Badge variant="destructive">{entry.totalHits}</Badge> : <span className="text-muted-foreground">-</span>}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-destructive">
-                          {entry.totalHitCost > 0 ? `-${entry.totalHitCost}` : "-"}
-                        </TableCell>
+                        <TableHead className="text-center cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort("hits")}>
+                          <div className="flex items-center justify-center gap-1 font-bold uppercase text-[10px] tracking-widest">
+                            Hits {getSortIcon("hits")}
+                          </div>
+                        </TableHead>
+                        <TableHead className="text-right cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort("hitCost")}>
+                          <div className="flex items-center justify-end gap-1 font-bold uppercase text-[10px] tracking-widest">
+                            Cost {getSortIcon("hitCost")}
+                          </div>
+                        </TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Transfer Analysis: {selectedTeam?.userName}</DialogTitle>
-                  <DialogDescription>Breakdown of transfer hits per gameweek</DialogDescription>
-                </DialogHeader>
-                {selectedTeam && (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="bg-muted/30 p-4 rounded-lg text-center">
-                        <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Total Hits</div>
-                        <div className="text-2xl font-sports font-bold text-destructive">{selectedTeam.totalHits}</div>
-                      </div>
-                      <div className="bg-muted/30 p-4 rounded-lg text-center">
-                        <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Points Lost</div>
-                        <div className="text-2xl font-sports font-bold text-destructive">-{selectedTeam.totalHitCost}</div>
-                      </div>
-                      <div className="bg-muted/30 p-4 rounded-lg text-center">
-                        <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Net Points</div>
-                        <div className="text-2xl font-sports font-bold">{selectedTeam.totalPointsNoHits}</div>
-                      </div>
-                      <div className="bg-primary/10 p-4 rounded-lg text-center border border-primary/20">
-                        <div className="text-xs text-primary uppercase tracking-wider font-bold">Official Total</div>
-                        <div className="text-2xl font-sports font-bold text-primary">{selectedTeam.totalPointsFPL}</div>
-                      </div>
-                    </div>
-
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/30 hover:bg-muted/30">
-                          <TableHead>Gameweek</TableHead>
-                          <TableHead className="text-center">Tx Made</TableHead>
-                          <TableHead className="text-center">Hits</TableHead>
-                          <TableHead className="text-center">Cost</TableHead>
-                          <TableHead className="text-right">GW Points</TableHead>
+                    </TableHeader>
+                    <TableBody>
+                      {sortedLeaderboard.map((entry, index) => (
+                        <TableRow key={entry.teamId} className="border-border/50 transition-colors hover:bg-muted/30">
+                          <TableCell className="font-mono">{getPositionBadge(index + 1)}</TableCell>
+                          <TableCell>
+                            <button onClick={() => handleTeamClick(entry)} className="font-bold hover:text-primary transition-colors flex items-center gap-2 group text-left">
+                              {entry.userName}
+                              <ArrowRightLeft className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
+                            </button>
+                          </TableCell>
+                          {showNoHits && (
+                            <TableCell className="text-right font-mono font-medium text-muted-foreground">
+                              {entry.totalPointsNoHits}
+                            </TableCell>
+                          )}
+                          <TableCell className="text-right font-mono font-bold text-lg text-primary">
+                            {entry.totalPointsFPL}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {entry.totalHits > 0 ? <Badge variant="destructive">{entry.totalHits}</Badge> : <span className="text-muted-foreground">-</span>}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-destructive">
+                            {entry.totalHitCost > 0 ? `-${entry.totalHitCost}` : "-"}
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {selectedTeam.gameweeks.sort((a, b) => b.gameweek - a.gameweek).map((gw) => (
-                          <TableRow key={gw.gameweek}>
-                            <TableCell className="font-bold">GW {gw.gameweek}</TableCell>
-                            <TableCell className="text-center text-muted-foreground">{gw.transfers}</TableCell>
-                            <TableCell className="text-center">{gw.transfersCost < 0 ? <Badge variant="destructive">{Math.abs(gw.transfersCost) / 4}</Badge> : "-"}</TableCell>
-                            <TableCell className="text-center font-mono text-destructive">{gw.transfersCost < 0 ? gw.transfersCost : "-"}</TableCell>
-                            <TableCell className="text-right font-mono font-bold">{gw.points}</TableCell>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Transfer Analysis: {selectedTeam?.userName}</DialogTitle>
+                    <DialogDescription>Breakdown of transfer hits per gameweek</DialogDescription>
+                  </DialogHeader>
+                  {selectedTeam && (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-muted/30 p-4 rounded-lg text-center">
+                          <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Total Hits</div>
+                          <div className="text-2xl font-sports font-bold text-destructive">{selectedTeam.totalHits}</div>
+                        </div>
+                        <div className="bg-muted/30 p-4 rounded-lg text-center">
+                          <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Points Lost</div>
+                          <div className="text-2xl font-sports font-bold text-destructive">-{selectedTeam.totalHitCost}</div>
+                        </div>
+                        <div className="bg-muted/30 p-4 rounded-lg text-center">
+                          <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Net Points</div>
+                          <div className="text-2xl font-sports font-bold">{selectedTeam.totalPointsNoHits}</div>
+                        </div>
+                        <div className="bg-primary/10 p-4 rounded-lg text-center border border-primary/20">
+                          <div className="text-xs text-primary uppercase tracking-wider font-bold">Official Total</div>
+                          <div className="text-2xl font-sports font-bold text-primary">{selectedTeam.totalPointsFPL}</div>
+                        </div>
+                      </div>
+
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/30 hover:bg-muted/30">
+                            <TableHead>Gameweek</TableHead>
+                            <TableHead className="text-center">Tx Made</TableHead>
+                            <TableHead className="text-center">Hits</TableHead>
+                            <TableHead className="text-center">Cost</TableHead>
+                            <TableHead className="text-right">GW Points</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </DialogContent>
-            </Dialog>
-          </BlurFade>
-        )}
+                        </TableHeader>
+                        <TableBody>
+                          {selectedTeam.gameweeks.sort((a, b) => b.gameweek - a.gameweek).map((gw) => (
+                            <TableRow key={gw.gameweek}>
+                              <TableCell className="font-bold">GW {gw.gameweek}</TableCell>
+                              <TableCell className="text-center text-muted-foreground">{gw.transfers}</TableCell>
+                              <TableCell className="text-center">{gw.transfersCost < 0 ? <Badge variant="destructive">{Math.abs(gw.transfersCost) / 4}</Badge> : "-"}</TableCell>
+                              <TableCell className="text-center font-mono text-destructive">{gw.transfersCost < 0 ? gw.transfersCost : "-"}</TableCell>
+                              <TableCell className="text-right font-mono font-bold">{gw.points}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
+            </BlurFade>
+          )}
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   )
 }
